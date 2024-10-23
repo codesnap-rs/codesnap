@@ -7,4 +7,5 @@ pub mod highlight_code_block;
 pub mod interface;
 pub mod line_number;
 pub mod rect;
+pub mod row;
 pub mod watermark;

@@ -9,11 +9,13 @@ use crate::components::code_block::CodeBlock;
 use crate::components::container::Container;
 use crate::components::editor::code::Code;
 use crate::components::editor::mac_title_bar::MacTitleBar;
+use crate::components::editor::title::Title;
 use crate::components::highlight_code_block::HighlightCodeBlock;
 use crate::components::interface::component::ComponentContext;
 use crate::components::interface::render_error;
 use crate::components::line_number::LineNumber;
 use crate::components::rect::Rect;
+use crate::components::row::Row;
 use crate::components::watermark::Watermark;
 use crate::edges::padding::Padding;
 
@@ -22,7 +24,7 @@ pub struct SnapshotConfig {
     // Display the MacOS style title bar or not
     pub mac_window_bar: bool,
     // Wartermark of the code snapshot
-    pub watermark: String,
+    pub watermark: Option<String>,
     // Editor title
     pub title: Option<String>,
     pub code_font_family: String,
@@ -68,7 +70,7 @@ pub fn create_template(config: SnapshotConfig) -> render_error::Result<Pixmap> {
     let watermark = if background_padding.bottom >= VIEW_WATERMARK_PADDING {
         config.watermark
     } else {
-        "".to_string()
+        None
     };
     let pixmap = Container::from_children(vec![Box::new(Background::new(
         background_padding,
@@ -82,7 +84,10 @@ pub fn create_template(config: SnapshotConfig) -> render_error::Result<Pixmap> {
                     1.,
                     Color::from_rgba8(255, 255, 255, 50),
                     vec![
-                        Box::new(MacTitleBar::from_radius(6., config.mac_window_bar)),
+                        Box::new(Row::from_children(vec![
+                            Box::new(MacTitleBar::from_radius(6., config.mac_window_bar)),
+                            Box::new(Title::from_text("CodeSnap")),
+                        ])),
                         Box::new(Breadcrumbs::from_path(
                             config.file_path,
                             15.,

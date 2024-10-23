@@ -90,7 +90,7 @@ impl Snapshot for ImageSnapshot {
             vec![
                 Box::new(
                     Rect::create_with_border(
-                        8.,
+                        12.,
                         Color::from_rgba8(40, 44, 52, 229),
                         config.min_width,
                         Padding::from_value(16.),
@@ -99,7 +99,7 @@ impl Snapshot for ImageSnapshot {
                         vec![
                             Box::new(Row::from_children(vec![
                                 Box::new(MacTitleBar::from_radius(6., config.mac_window_bar)),
-                                Box::new(Title::from_text("CodeSnap")),
+                                Box::new(Title::from_text(config.title)),
                             ])),
                             Box::new(Breadcrumbs::from_path(
                                 config.file_path.clone(),

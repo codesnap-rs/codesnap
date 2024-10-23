@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub struct Title {
-    text: String,
+    text: Option<String>,
     children: Vec<Box<dyn Component>>,
 }
 
@@ -20,8 +20,12 @@ impl Component for Title {
         &self.children
     }
 
+    fn render_condition(&self) -> bool {
+        self.text.is_some()
+    }
+
     fn style(&self) -> RawComponentStyle {
-        let calced_title_width = 6. * self.text.len() as f32;
+        let calced_title_width = 6. * self.text.clone().unwrap().len() as f32;
 
         RawComponentStyle::default()
             .margin(Margin {
@@ -42,6 +46,7 @@ impl Component for Title {
         let attrs = Attrs::new()
             .weight(Weight::BOLD)
             .color(Color::rgb(172, 169, 178));
+        let text = self.text.clone().unwrap();
 
         FontRenderer::new(
             10.,
@@ -54,7 +59,7 @@ impl Component for Title {
             render_params.y,
             pixmap.width() as f32,
             pixmap.height() as f32,
-            &self.text,
+            &text,
             attrs,
             Some(Align::Center),
             pixmap,
@@ -65,9 +70,9 @@ impl Component for Title {
 }
 
 impl Title {
-    pub fn from_text(text: &str) -> Title {
+    pub fn from_text(text: Option<String>) -> Title {
         Title {
-            text: text.to_string(),
+            text,
             children: vec![],
         }
     }

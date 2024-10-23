@@ -40,7 +40,7 @@ impl Component for Code {
             self.value.clone(),
             params.code_font_family.clone(),
             params.code_file_path.clone(),
-            params.extension.clone(),
+            params.language.clone(),
         );
         let highlight_result = highlight.parse(&params.themes_folder, &params.theme)?;
 
@@ -64,7 +64,7 @@ impl Component for Code {
 }
 
 impl Code {
-    pub fn new(value: String, line_height: f32, font_size: f32) -> Code {
+    pub fn new(value: &str, line_height: f32, font_size: f32) -> Code {
         Code {
             value: prepare_code(&value),
             line_height,

@@ -71,12 +71,12 @@ impl Component for LineNumber {
 }
 
 impl LineNumber {
-    pub fn new(content: &str, start_line_number: Option<usize>, line_height: f32) -> LineNumber {
+    pub fn new(content: &str, start_line_number: Option<u32>, line_height: f32) -> LineNumber {
         match start_line_number {
             None => LineNumber::default(),
             Some(start_line_number) => {
                 let lines = content.split("\n").collect::<Vec<&str>>();
-                let max_line_number = lines.len() + start_line_number;
+                let max_line_number = lines.len() as u32 + start_line_number;
                 let number_of_digit = (max_line_number - 1).to_string().len();
 
                 LineNumber {

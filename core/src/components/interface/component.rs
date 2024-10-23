@@ -2,8 +2,7 @@ use super::{
     render_error,
     style::{ComponentAlign, ComponentStyle, RawComponentStyle, Size, Style},
 };
-use crate::edges::edge::Edge;
-use crate::template::SnapshotConfig;
+use crate::{config::SnapshotConfig, edges::edge::Edge};
 use std::sync::Arc;
 use tiny_skia::Pixmap;
 

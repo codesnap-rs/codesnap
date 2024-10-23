@@ -12,8 +12,8 @@ fn min_width(width: f32) -> f32 {
     }
 }
 
-pub fn calc_max_line_number_length(code_length: usize, start_line_number: usize) -> usize {
-    let max_line_number = code_length + start_line_number;
+pub fn calc_max_line_number_length(code_length: usize, start_line_number: u32) -> usize {
+    let max_line_number = code_length as u32 + start_line_number;
 
     // If code length is 1, the max_line_number will equal to start_line_number
     (max_line_number - 1).to_string().len()

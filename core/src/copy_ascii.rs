@@ -1,6 +1,6 @@
 use crate::{
-    code::{calc_max_line_number_length, calc_wh, prepare_code},
-    config::TakeSnapshotParams,
+    template::SnapshotConfig,
+    utils::code::{calc_max_line_number_length, calc_wh, prepare_code},
 };
 use anyhow::Result;
 use arboard::Clipboard;
@@ -19,7 +19,7 @@ fn optional(component: String, is_view: bool) -> String {
 }
 
 #[allow(dead_code)]
-pub fn copy_ascii(params: TakeSnapshotParams) -> Result<()> {
+pub fn copy_ascii(params: SnapshotConfig) -> Result<()> {
     let code = prepare_code(&params.code);
     let (width, height) = calc_wh(&code, 1., 1.);
     let calc_line_number_width =
@@ -60,18 +60,18 @@ pub fn copy_ascii(params: TakeSnapshotParams) -> Result<()> {
     );
     let ascii_snapshot = format!("{top_frame}{breadcrumbs}{code}{bottom_frame}");
 
-    #[cfg(target_os = "linux")]
-    std::thread::spawn(move || {
-        Clipboard::new()
-            .unwrap()
-            .set()
-            .wait()
-            .text(ascii_snapshot)
-            .unwrap();
-    });
-
-    #[cfg(not(target_os = "linux"))]
-    Clipboard::new().unwrap().set_text(ascii_snapshot)?;
+    // #[cfg(target_os = "linux")]
+    // std::thread::spawn(move || {
+    //     Clipboard::new()
+    //         .unwrap()
+    //         .set()
+    //         .wait()
+    //         .text(ascii_snapshot)
+    //         .unwrap();
+    // });
+    //
+    // #[cfg(not(target_os = "linux"))]
+    // Clipboard::new().unwrap().set_text(ascii_snapshot)?;
 
     Ok(())
 }

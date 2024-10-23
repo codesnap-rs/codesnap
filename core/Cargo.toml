@@ -2,9 +2,10 @@
 name = "codesnap"
 version = "0.0.1"
 edition = "2021"
+description = "A tool for creating code snapshots"
+license = "MIT"
 
 [dependencies]
-# nvim-oxi = { features = ["neovim-0-9", "libuv"], version = "0.5.1" }
 tiny-skia = "0.11.4"
 syntect = "5.2.0"
 cosmic-text = "0.12.0"
@@ -15,3 +16,4 @@ regex = "1.10.5"
 two-face = "0.4.0"
 cached = "0.53.1"
 anyhow = "1.0.89"
+rgb = "0.8.50"

@@ -228,6 +228,7 @@ dependencies = [
  "cached",
  "cosmic-text",
  "regex",
+ "rgb",
  "serde",
  "syntect",
  "thiserror",
@@ -563,9 +564,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "image"
-version = "0.25.2"
+version = "0.25.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99314c8a2152b8ddb211f924cdae532d8c5e4c8bb54728e12fff1b0cd5963a10"
+checksum = "bc144d44a31d753b02ce64093d532f55ff8dc4ebf2ffb8a63c0dda691385acae"
 dependencies = [
  "bytemuck",
  "byteorder-lite",
@@ -1049,6 +1050,15 @@ name = "regex-syntax"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
+
+[[package]]
+name = "rgb"
+version = "0.8.50"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
+dependencies = [
+ "bytemuck",
+]
 
 [[package]]
 name = "roxmltree"

@@ -1,7 +1,9 @@
 use cosmic_text::{Attrs, Color, Family};
 use regex::Regex;
 
-use crate::{code::calc_wh_with_min_width, edges::margin::Margin, text::FontRenderer};
+use crate::{
+    edges::margin::Margin, utils::code::calc_wh_with_min_width, utils::text::FontRenderer,
+};
 
 use super::interface::{
     component::Component,
@@ -26,10 +28,9 @@ impl Component for Breadcrumbs {
         if self.has_breadcrumbs {
             let (w, h) = calc_wh_with_min_width(&self.path, 8., self.line_height);
 
-            style.size(Size::Num(w), Size::Num(h)).margin(Margin {
-                top: 5.,
-                ..Margin::default()
-            })
+            style
+                .size(Size::Num(w), Size::Num(h))
+                .margin(Margin::default())
         } else {
             style
         }

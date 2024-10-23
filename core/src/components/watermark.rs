@@ -1,7 +1,7 @@
 use cosmic_text::{Align, Attrs, Family};
 use tiny_skia::Pixmap;
 
-use crate::{edges::margin::Margin, text::FontRenderer};
+use crate::{edges::margin::Margin, utils::text::FontRenderer};
 
 use super::interface::{
     component::{Component, ComponentContext, RenderParams},
@@ -63,7 +63,7 @@ impl Component for Watermark {
         if self.value != "" {
             default_style.margin(Margin {
                 bottom: 22.,
-                top: 15.,
+                top: 50.,
                 ..Margin::default()
             })
         } else {

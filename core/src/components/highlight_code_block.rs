@@ -1,7 +1,4 @@
-use super::{
-    interface::{component::Component, style::ComponentStyle},
-    rect::EDITOR_PADDING,
-};
+use super::interface::{component::Component, style::ComponentStyle};
 use tiny_skia::{Color, Paint, Rect, Transform};
 
 #[derive(Default)]
@@ -37,9 +34,9 @@ impl Component for HighlightCodeBlock {
         paint.set_color(Color::from_rgba8(255, 255, 255, 10));
         pixmap.fill_rect(
             Rect::from_xywh(
-                render_params.x - EDITOR_PADDING,
+                render_params.x - 20.,
                 render_params.y + start_y_offset,
-                parent_style.width + EDITOR_PADDING * 2.,
+                parent_style.width + 20. * 2.,
                 (self.end_line_number - self.start_line_number + 1) as f32 * self.line_height,
             )
             .unwrap(),

@@ -3,8 +3,8 @@ use tiny_skia::{
 };
 
 use crate::{
-    color::{is_valid_hex_color, RgbaColor},
     edges::{edge::Edge, padding::Padding},
+    utils::color::{is_valid_hex_color, RgbaColor},
 };
 
 use super::interface::{
@@ -21,22 +21,6 @@ pub struct Background {
 impl Background {
     pub fn new(padding: Padding, children: Vec<Box<dyn Component>>) -> Background {
         Background { children, padding }
-    }
-
-    pub fn parse_background_padding(
-        horizontal_background_padding: f32,
-        vertical_background_padding: f32,
-        background_padding: Option<f32>,
-    ) -> Padding {
-        match background_padding {
-            Some(padding) => Padding::from_value(padding),
-            None => Padding {
-                top: vertical_background_padding,
-                bottom: vertical_background_padding,
-                left: horizontal_background_padding,
-                right: horizontal_background_padding,
-            },
-        }
     }
 
     pub fn has_background(padding: &Padding) -> bool {

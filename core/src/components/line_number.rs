@@ -3,7 +3,7 @@ use super::interface::{
     render_error,
     style::{ComponentStyle, RawComponentStyle, Size, Style},
 };
-use crate::{code::CHAR_WIDTH, edges::margin::Margin, text::FontRenderer};
+use crate::{edges::margin::Margin, utils::code::CHAR_WIDTH, utils::text::FontRenderer};
 use cosmic_text::{Attrs, Color, Family};
 
 const FONT_SIZE: f32 = 14.;

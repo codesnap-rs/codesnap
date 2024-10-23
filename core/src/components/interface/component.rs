@@ -2,13 +2,14 @@ use super::{
     render_error,
     style::{ComponentAlign, ComponentStyle, RawComponentStyle, Size, Style},
 };
-use crate::{config::TakeSnapshotParams, edges::edge::Edge};
+use crate::edges::edge::Edge;
+use crate::template::SnapshotConfig;
 use std::sync::Arc;
 use tiny_skia::Pixmap;
 
 pub struct ComponentContext {
     pub scale_factor: f32,
-    pub take_snapshot_params: Arc<TakeSnapshotParams>,
+    pub take_snapshot_params: Arc<SnapshotConfig>,
 }
 
 #[derive(Default, Clone)]

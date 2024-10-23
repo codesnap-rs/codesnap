@@ -1,12 +1,12 @@
 use crate::{
-    code::{calc_wh_with_min_width, prepare_code, CHAR_WIDTH},
     components::interface::{
         component::{Component, ComponentContext, RenderParams},
         render_error,
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
-    highlight::Highlight,
-    text::FontRenderer,
+    utils::code::{calc_wh_with_min_width, prepare_code, CHAR_WIDTH},
+    utils::highlight::Highlight,
+    utils::text::FontRenderer,
 };
 
 pub struct Code {

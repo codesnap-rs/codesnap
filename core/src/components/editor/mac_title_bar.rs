@@ -55,7 +55,7 @@ impl Component for MacTitleBar {
                 Color::from_rgba8(255, 186, 46, 255),
                 Color::from_rgba8(43, 200, 65, 255),
             ],
-            25.,
+            4.,
             Transform::from_scale(context.scale_factor, context.scale_factor),
         );
 
@@ -82,7 +82,16 @@ impl MacTitleBar {
         transform: Transform,
     ) {
         for (index, color) in colors.into_iter().enumerate() {
-            self.draw_control_button(x, y, pixmap, color, index as f32 * gap, transform);
+            let diameter = self.radius * 2.;
+
+            self.draw_control_button(
+                x,
+                y,
+                pixmap,
+                color,
+                index as f32 * (diameter + gap),
+                transform,
+            );
         }
     }
 

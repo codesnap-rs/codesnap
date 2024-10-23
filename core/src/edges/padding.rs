@@ -27,4 +27,20 @@ impl Padding {
             bottom: value,
         }
     }
+
+    pub fn from_config(
+        horizontal_background_padding: f32,
+        vertical_background_padding: f32,
+        background_padding: Option<f32>,
+    ) -> Padding {
+        match background_padding {
+            Some(padding) => Padding::from_value(padding),
+            None => Padding {
+                top: vertical_background_padding,
+                bottom: vertical_background_padding,
+                left: horizontal_background_padding,
+                right: horizontal_background_padding,
+            },
+        }
+    }
 }

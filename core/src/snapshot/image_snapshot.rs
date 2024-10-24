@@ -1,10 +1,11 @@
-use std::{sync::Arc, thread};
+use std::sync::Arc;
 
-use crate::{config::SnapshotConfig, utils::path::parse_save_path};
+use crate::{
+    config::{SnapshotConfig, VIEW_WATERMARK_PADDING},
+    utils::{clipboard::Clipboard, path::parse_file_name, theme_provider::ThemeProvider},
+};
 use anyhow::bail;
-#[cfg(target_os = "linux")]
-use arboard::SetExtLinux;
-use arboard::{Clipboard, ImageData};
+use arboard::ImageData;
 use tiny_skia::{Color, Pixmap};
 
 use crate::{
@@ -23,57 +24,66 @@ use crate::{
     },
     edges::padding::Padding,
 };
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use super::snapshot::Snapshot;
 
-const SCALE_FACTOR: f32 = 3.;
 const LINE_HEIGHT: f32 = 18.;
-const VIEW_WATERMARK_PADDING: f32 = 82.;
 
 pub struct ImageSnapshot {
     pixmap: Pixmap,
+    svg_content: Option<String>,
 }
 
 impl Snapshot for ImageSnapshot {
+    /// Copy the code snapshot to the clipboard
     fn copy(&self) -> anyhow::Result<()> {
-        let colors = self.pixmap.data();
-        let image_data = ImageData {
-            width: self.pixmap.width() as usize,
-            height: self.pixmap.height() as usize,
-            bytes: colors.into(),
-        };
+        let mut clipboard = Clipboard::new()?;
 
-        #[cfg(target_os = "linux")]
-        thread::scope(|s| -> Result<(), arboard::Error> {
-            s.spawn(|| -> Result<(), arboard::Error> {
-                Clipboard::new().unwrap().set().wait().image(image_data)
-            })
-            .join()
-            .unwrap()
-        })?;
+        match &self.svg_content {
+            Some(svg_content) => clipboard.set_text(svg_content)?,
+            None => {
+                let colors = self.pixmap.data();
+                let image_data = ImageData {
+                    width: self.pixmap.width() as usize,
+                    height: self.pixmap.height() as usize,
+                    bytes: colors.into(),
+                };
 
-        #[cfg(not(target_os = "linux"))]
-        Clipboard::new().unwrap().set_image(image_data)?;
+                clipboard.set_image(image_data)?;
+            }
+        }
 
         Ok(())
     }
 
+    /// Save the code snapshot to disk as PNG, please make sure you have set the `save_png`
+    /// before calling this method
     fn save(&self, save_path: &str) -> anyhow::Result<()> {
-        if !save_path.ends_with(".png") {
-            bail!("The save_path must ends with .png");
+        if !save_path.ends_with(".png") || !save_path.ends_with(".svg") {
+            bail!("The save_path must ends with .png or .svg");
         }
 
-        let path = parse_save_path(save_path.to_string())?;
+        let path = parse_file_name(save_path)?;
 
         self.pixmap.save_png(path)?;
 
         Ok(())
     }
 
-    fn from_config(config: SnapshotConfig) -> anyhow::Result<ImageSnapshot> {
+    fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
+        let theme_provider = ThemeProvider::from(
+            config.themes_folder.clone(),
+            &config.theme,
+            config.language.clone(),
+            config.code_file_path.clone(),
+            &config.code,
+        )?;
+        let editor_background_color = theme_provider.theme_background();
         let context = ComponentContext {
-            scale_factor: SCALE_FACTOR,
+            scale_factor: config.scale_factor as f32,
             take_snapshot_params: Arc::new(config.clone()),
+            theme_provider,
         };
         let background_padding =
             Padding::from_config(config.bg_x_padding, config.bg_y_padding, config.bg_padding);
@@ -91,7 +101,7 @@ impl Snapshot for ImageSnapshot {
                 Box::new(
                     Rect::create_with_border(
                         12.,
-                        Color::from_rgba8(40, 44, 52, 229),
+                        editor_background_color.into(),
                         config.min_width,
                         Padding::from_value(16.),
                         1.,
@@ -129,6 +139,30 @@ impl Snapshot for ImageSnapshot {
         ))])
         .draw_root(&context)?;
 
-        Ok(ImageSnapshot { pixmap })
+        Ok(ImageSnapshot {
+            pixmap,
+            svg_content: None,
+        })
+    }
+}
+
+impl ImageSnapshot {
+    /// CodeSnap use tiny_skia to generate the image snapshot, and the format of generated image
+    /// is PNG, if you want a SVG code snapshot, you can use this method to convert the PNG to SVG
+    ///
+    /// WARNING: This method is not really convert the PNG to SVG, it encode PNG to Base64 and
+    /// format it to SVG, so the SVG file is still a image file, not a real SVG file. And the
+    /// encoding process will take some time, which depends on the size of the PNG image, if
+    /// the PNG image is too large, the encoding process will take a long time.
+    pub fn to_svg(&mut self) -> Result<&Self, anyhow::Error> {
+        let png_data = self.pixmap.encode_png()?;
+        let encoded_base64_png_data = STANDARD.encode(png_data);
+        let parsed_svg_content = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image href="data:image/png;base64,{}"/></svg>"#,
+            encoded_base64_png_data.as_str()
+        );
+
+        self.svg_content = Some(parsed_svg_content);
+        Ok(self)
     }
 }

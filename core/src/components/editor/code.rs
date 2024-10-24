@@ -42,13 +42,14 @@ impl Component for Code {
             params.code_file_path.clone(),
             params.language.clone(),
         );
-        let highlight_result = highlight.parse(&params.themes_folder, &params.theme)?;
+        let (mut highlight_lines, syntax_set) = context.theme_provider.highlight();
+        let highlight_result = highlight.parse(&mut highlight_lines, syntax_set)?;
 
         FontRenderer::new(
             self.font_size,
             self.line_height,
             context.scale_factor,
-            &context.take_snapshot_params.fonts_folder,
+            context.take_snapshot_params.fonts_folder.clone(),
         )
         .draw_text(
             render_params.x,

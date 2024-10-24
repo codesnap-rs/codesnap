@@ -15,11 +15,14 @@ impl FontRenderer {
         font_size: f32,
         line_height: f32,
         scale_factor: f32,
-        fonts_folder: &str,
+        fonts_folder: Option<String>,
     ) -> FontRenderer {
         let mut font_system = FontSystem::new();
 
-        font_system.db_mut().load_fonts_dir(fonts_folder);
+        // If user has provided a custom fonts folder, load fonts from it
+        if let Some(fonts_folder) = fonts_folder {
+            font_system.db_mut().load_fonts_dir(fonts_folder);
+        }
 
         let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
 

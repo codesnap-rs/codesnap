@@ -1,11 +1,9 @@
-use std::{cmp::max, thread};
+use std::cmp::max;
 
 use crate::utils::code::{calc_max_line_number_length, calc_wh, prepare_code};
 
 use super::snapshot::Snapshot;
 use arboard::Clipboard;
-#[cfg(target_os = "linux")]
-use arboard::SetExtLinux;
 
 const SPACE_BOTH_SIDE: usize = 2;
 
@@ -23,21 +21,7 @@ fn optional(component: String, is_view: bool) -> String {
 
 impl Snapshot for ASCIISnapshot {
     fn copy(&self) -> anyhow::Result<()> {
-        #[cfg(target_os = "linux")]
-        thread::scope(|s| -> Result<(), arboard::Error> {
-            s.spawn(move || -> Result<(), arboard::Error> {
-                Clipboard::new()
-                    .unwrap()
-                    .set()
-                    .wait()
-                    .text(self.content.clone())
-            })
-            .join()
-            .unwrap()
-        })?;
-
-        #[cfg(not(target_os = "linux"))]
-        Clipboard::new().unwrap().set_text(self.content.clone())?;
+        Clipboard::new()?.set_text(self.content.as_str())?;
 
         Ok(())
     }

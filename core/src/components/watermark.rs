@@ -33,7 +33,7 @@ impl Component for Watermark {
             20.,
             20.,
             context.scale_factor,
-            &context.take_snapshot_params.fonts_folder,
+            context.take_snapshot_params.fonts_folder.clone(),
         )
         .draw_line(
             0.,

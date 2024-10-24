@@ -53,7 +53,7 @@ impl Component for Breadcrumbs {
                 12.,
                 self.line_height,
                 context.scale_factor,
-                &context.take_snapshot_params.fonts_folder,
+                context.take_snapshot_params.fonts_folder.clone(),
             )
             .draw_text(
                 render_params.x,

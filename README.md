@@ -1,10 +1,12 @@
 <img width="350" src="/doc/logo.png" />
 
 <div>
-  <img src="https://img.shields.io/github/actions/workflow/status/mistricky/CodeSnap/lint.yml?style=flat&label=Lint" alt="lint action status" />
-  <img src="https://img.shields.io/github/actions/workflow/status/mistricky/CodeSnap/lint.yml?style=flat&label=Code style" alt="fmt action status" />
-  <img alt="Crates.io Version" src="https://img.shields.io/crates/v/CodeSnap?logo=rust&color=%232ecc71">
-  <img alt="Lint convention" src="https://img.shields.io/badge/wizardoc--commit--convention-%233498db?style=flat&logo=lintcode&logoColor=white&link=https%3A%2F%2Fgithub.com%2Fwizardoc%2Fcommitlint-wizardoc">
+  
+  [![Lint CI](https://img.shields.io/github/actions/workflow/status/mistricky/CodeSnap/lint.yml?style=flat&label=Lint)](https://github.com/mistricky/CodeSnap/blob/main/.github/workflows/lint.yml)
+  [![Code Style CI](https://img.shields.io/github/actions/workflow/status/mistricky/CodeSnap/lint.yml?style=flat&label=Code%20style)](https://github.com/mistricky/CodeSnap/blob/main/.github/workflows/lint.yml)
+  [![Crates.io Version](https://img.shields.io/crates/v/CodeSnap?logo=rust&color=%232ecc71)](https://crates.io/crates/codesnap)
+  [![Lint convention](https://img.shields.io/badge/wizardoc--commit--convention-%233498db?style=flat&logo=lintcode&logoColor=white&link=https%3A%2F%2Fgithub.com%2Fwizardoc%2Fcommitlint-wizardoc)](https://github.com/wizardoc/commitlint-wizardoc)
+  
 </div>
 
 

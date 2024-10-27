@@ -1,6 +1,4 @@
-use tiny_skia::{
-    Color, GradientStop, LinearGradient, Paint, Pixmap, Point, Rect, SpreadMode, Transform,
-};
+use tiny_skia::{LinearGradient, Paint, Pixmap, Point, Rect, SpreadMode, Transform};
 
 use crate::{
     edges::{edge::Edge, padding::Padding},
@@ -9,7 +7,7 @@ use crate::{
 
 use super::interface::{
     component::{Component, ComponentContext, RenderParams},
-    render_error::{self, RenderError},
+    render_error::{self},
     style::{ComponentAlign, ComponentStyle, RawComponentStyle},
 };
 

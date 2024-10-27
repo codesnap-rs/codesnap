@@ -1,1 +1,4 @@
-workspace = { members = ["cli", "core"] }
+[workspace]
+resolver = "2"
+
+members = ["cli", "core"]

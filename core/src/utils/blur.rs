@@ -30,11 +30,13 @@ impl<'a> ImageRefMut<'a> {
         }
     }
 
+    #[allow(dead_code)]
     #[inline]
     fn pixel_at(&self, x: u32, y: u32) -> RGBA8 {
         self.data[(self.width * y + x) as usize]
     }
 
+    #[allow(dead_code)]
     #[inline]
     fn pixel_at_mut(&mut self, x: u32, y: u32) -> &mut RGBA8 {
         &mut self.data[(self.width * y + x) as usize]

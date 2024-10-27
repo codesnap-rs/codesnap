@@ -27,6 +27,6 @@
 mod components;
 pub mod config;
 pub mod edges;
-pub mod preset_themes;
+pub mod preset_background;
 pub mod snapshot;
 pub mod utils;

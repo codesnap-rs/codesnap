@@ -4,7 +4,7 @@ use tiny_skia::{
 
 use crate::{
     edges::{edge::Edge, padding::Padding},
-    utils::color::RgbaColor,
+    utils::{color::RgbaColor, helpers::convert_vecs},
 };
 
 use super::interface::{
@@ -71,28 +71,13 @@ impl Component for Background {
                 paint.shader = LinearGradient::new(
                     Point::from_xy(start.x, start.y),
                     Point::from_xy(end.x, end.y),
-                    gradient_background.stops.clone(),
+                    convert_vecs(gradient_background.stops.clone()),
                     SpreadMode::Pad,
                     Transform::identity(),
                 )
                 .unwrap();
             }
         };
-
-        // if is_valid_hex_color(&params.background) {
-        //     let rgba_color: RgbaColor = params.background.as_str().into();
-        //
-        //     paint.set_color(rgba_color.into());
-        // } else {
-        //     paint.shader = LinearGradient::new(
-        //         Point::from_xy(0., 0.),
-        //         Point::from_xy(w, 0.),
-        //         Background::get_theme(&params.background)?,
-        //         SpreadMode::Pad,
-        //         Transform::identity(),
-        //     )
-        //     .unwrap();
-        // }
 
         pixmap.fill_rect(
             Rect::from_xywh(0., 0., w, h).unwrap(),
@@ -102,45 +87,5 @@ impl Component for Background {
         );
 
         Ok(())
-    }
-}
-
-impl Background {
-    fn get_theme(theme: &str) -> render_error::Result<Vec<GradientStop>> {
-        let theme = match theme {
-            "default" => vec![
-                GradientStop::new(0.0, Color::from_rgba8(58, 28, 113, 255)),
-                GradientStop::new(0.5, Color::from_rgba8(215, 109, 119, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(255, 175, 123, 255)),
-            ],
-            "sea" => vec![
-                GradientStop::new(0.0, Color::from_rgba8(31, 162, 255, 255)),
-                GradientStop::new(0.4, Color::from_rgba8(18, 216, 250, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(166, 255, 203, 255)),
-            ],
-            "grape" => vec![
-                GradientStop::new(0.28, Color::from_rgba8(103, 90, 247, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(189, 101, 250, 255)),
-            ],
-            "peach" => vec![
-                GradientStop::new(0.22, Color::from_rgba8(221, 94, 137, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(247, 187, 151, 255)),
-            ],
-            "summer" => vec![
-                GradientStop::new(0.28, Color::from_rgba8(248, 165, 194, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(116, 185, 255, 255)),
-            ],
-            "bamboo" => vec![
-                GradientStop::new(0.22, Color::from_rgba8(107, 203, 165, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(202, 244, 194, 255)),
-            ],
-            "dusk" => vec![
-                GradientStop::new(0.22, Color::from_rgba8(255, 98, 110, 255)),
-                GradientStop::new(0.95, Color::from_rgba8(255, 190, 113, 255)),
-            ],
-            _ => return Err(RenderError::UnknownBackgroundTheme(theme.to_string())),
-        };
-
-        Ok(theme)
     }
 }

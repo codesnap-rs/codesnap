@@ -1,0 +1,48 @@
+name: Release CodeSnap to crates.io 
+
+on:
+  push:
+    paths:
+      core/Cargo.toml
+    branches:
+      - main 
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Read version from core project 
+        id: read_toml
+        uses: SebRollen/toml-action@v1.0.2
+        with:
+          file: core/Cargo.toml
+          field: package.version
+
+      - name: Foo
+        run: "echo ${{ steps.read_toml.outputs.value }}"
+
+      - uses: actions-rs/cargo@v1
+        working-directory: core
+        with:
+          command: publish
+          args: --manifest-path core/Cargo.toml
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: v${{ steps.read_toml.outputs.value }}
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          generateReleaseNotes: true

@@ -2,6 +2,7 @@ pub mod blur;
 pub mod clipboard;
 pub mod code;
 pub mod color;
+pub mod helpers;
 pub mod highlight;
 pub mod path;
 pub mod text;

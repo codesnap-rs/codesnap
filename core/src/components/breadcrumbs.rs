@@ -1,8 +1,13 @@
-use cosmic_text::{Attrs, Color, Family};
+use std::path::MAIN_SEPARATOR_STR;
+
+use cosmic_text::{Attrs, Family};
 use regex::Regex;
 
 use crate::{
-    config, edges::margin::Margin, utils::code::calc_wh_with_min_width, utils::text::FontRenderer,
+    config,
+    edges::margin::Margin,
+    utils::text::FontRenderer,
+    utils::{code::calc_wh_with_min_width, color::RgbaColor},
 };
 
 use super::interface::{
@@ -21,6 +26,10 @@ pub struct Breadcrumbs {
 impl Component for Breadcrumbs {
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
+    }
+
+    fn render_condition(&self) -> bool {
+        self.config.is_some()
     }
 
     fn style(&self) -> RawComponentStyle {
@@ -47,27 +56,34 @@ impl Component for Breadcrumbs {
         style: &super::interface::style::ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> super::interface::render_error::Result<()> {
-        if self.config.is_some() {
-            if let Some(ref path) = self.path {
-                let attrs = Attrs::new()
-                    .color(Color::rgb(128, 132, 139))
-                    .family(Family::Name(&context.take_snapshot_params.code.font_family));
+        let config = self.config.clone().unwrap();
 
-                FontRenderer::new(
-                    12.,
-                    LINE_HEIGHT,
-                    context.scale_factor,
-                    context.take_snapshot_params.fonts_folder.clone(),
-                )
-                .draw_text(
-                    render_params.x,
-                    render_params.y,
-                    style.width,
-                    LINE_HEIGHT,
-                    vec![(path, attrs)],
-                    pixmap,
-                );
-            }
+        if let Some(ref path) = self.path {
+            let path = config
+                .separator
+                .and_then(|separator| Some(parse_separator(path, &separator)))
+                .unwrap_or(path.clone());
+            let color: RgbaColor = config.color.as_str().into();
+            let attrs = Attrs::new().color(color.into());
+            let attrs = match config.font_family {
+                Some(ref font_family) => attrs.family(Family::Name(font_family)),
+                None => attrs,
+            };
+
+            FontRenderer::new(
+                12.,
+                LINE_HEIGHT,
+                context.scale_factor,
+                context.take_snapshot_params.fonts_folder.clone(),
+            )
+            .draw_text(
+                render_params.x,
+                render_params.y,
+                style.width,
+                LINE_HEIGHT,
+                vec![(&path, attrs)],
+                pixmap,
+            );
         }
 
         Ok(())
@@ -85,11 +101,11 @@ impl Breadcrumbs {
             config,
         }
     }
+}
 
-    pub fn parse_separator(&self, path: &str, separator: &str) -> String {
-        Regex::new("/")
-            .unwrap()
-            .replace_all(path, separator)
-            .to_string()
-    }
+fn parse_separator(path_str: &str, separator: &str) -> String {
+    Regex::new(MAIN_SEPARATOR_STR)
+        .unwrap()
+        .replace_all(path_str, separator)
+        .to_string()
 }

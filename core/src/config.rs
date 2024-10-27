@@ -1,22 +1,23 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use tiny_skia::GradientStop;
+use tiny_skia::{Color, GradientStop};
 
 use crate::{
-    preset_themes::BAMBOO,
+    preset_background::BAMBOO,
     snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot},
+    utils::color::RgbaColor,
 };
 
 pub const DEFAULT_WINDOW_MARGIN: f32 = 90.;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum DimensionValue {
     Num(f32),
     Max,
 }
 
-#[derive(Clone)]
-pub(crate) struct Point<T> {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Point<T> {
     pub(crate) x: T,
     pub(crate) y: T,
 }
@@ -38,34 +39,48 @@ impl Point<DimensionValue> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
+pub struct LinearGradientStop {
+    position: f32,
+    color: String,
+}
+
+impl LinearGradientStop {
+    pub fn new(position: f32, color: &str) -> Self {
+        if position < 0. || position > 1. {
+            panic!("The position of the gradient stop should be in the range of 0.0 to 1.0");
+        }
+
+        LinearGradientStop {
+            position,
+            color: color.to_string(),
+        }
+    }
+}
+
+impl From<LinearGradientStop> for GradientStop {
+    fn from(stop: LinearGradientStop) -> Self {
+        let rgba_color: RgbaColor = stop.color.as_str().into();
+        let color: Color = rgba_color.into();
+
+        GradientStop::new(stop.position, color)
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct LinearGradient {
     pub start: GradientPoint,
     pub end: GradientPoint,
-    pub stops: Vec<GradientStop>,
+    pub stops: Vec<LinearGradientStop>,
 }
 
-// type BackgroundLinearGradient = LinearGradient<Vec<GradientStop>>;
-
-// pub(crate) type PresetBackgroundLinearGradient = LinearGradient<&'static [GradientStop]>;
-
-// impl From<PresetBackgroundLinearGradient> for BackgroundLinearGradient {
-//     fn from(value: PresetBackgroundLinearGradient) -> Self {
-//         BackgroundLinearGradient {
-//             start: value.start,
-//             end: value.end,
-//             stops: value.stops.to_vec(),
-//         }
-//     }
-// }
-
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Background {
     Solid(String),
     Gradient(LinearGradient),
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 pub struct TitleConfig {
     #[builder(setter(into))]
     pub title: String,
@@ -77,7 +92,7 @@ pub struct TitleConfig {
     pub color: String,
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 pub struct Margin {
     #[builder(setter(into, strip_option), default = DEFAULT_WINDOW_MARGIN)]
     pub x: f32,
@@ -86,7 +101,7 @@ pub struct Margin {
     pub y: f32,
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 pub struct Breadcrumbs {
     #[builder(setter(into, strip_option), default = None)]
     pub separator: Option<String>,
@@ -94,17 +109,17 @@ pub struct Breadcrumbs {
     #[builder(setter(into, strip_option), default = None)]
     pub font_family: Option<String>,
 
-    #[builder(setter(into, strip_option), default = None)]
-    pub color: Option<String>,
+    #[builder(setter(into), default = String::from("#80848b"))]
+    pub color: String,
 }
 
-#[derive(Clone, Builder, Default)]
+#[derive(Clone, Builder, Default, Serialize, Deserialize)]
 pub struct Border {
     #[builder(setter(into))]
     pub color: String,
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 pub struct Window {
     #[builder(setter(into, strip_option), default = Margin {x : DEFAULT_WINDOW_MARGIN, y: DEFAULT_WINDOW_MARGIN})]
     pub margin: Margin,
@@ -122,13 +137,13 @@ pub struct Window {
     pub shadow: f32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum HighlightLine {
     Single(u32, String),
     Range(u32, u32, String),
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 pub struct LineNumber {
     #[builder(setter(into))]
     pub start_number: u32,
@@ -137,7 +152,7 @@ pub struct LineNumber {
     pub color: String,
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 pub struct Code {
     #[builder(setter(into))]
     pub content: String,
@@ -184,7 +199,7 @@ pub struct Watermark {
     pub color: String,
 }
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Builder, Serialize, Deserialize)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]

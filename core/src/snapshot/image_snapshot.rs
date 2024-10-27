@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    config::{SnapshotConfig, DEFAULT_WINDOW_MARGIN},
+    config::{Border, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
     utils::{
         clipboard::Clipboard, color::RgbaColor, path::parse_file_name,
         theme_provider::ThemeProvider,
@@ -113,7 +113,9 @@ impl ImageSnapshot {
         let border_rgba_color: RgbaColor = config
             .window
             .border
-            .unwrap_or_default()
+            .unwrap_or(Border {
+                color: String::from("#ffffff30"),
+            })
             .color
             .as_str()
             .into();

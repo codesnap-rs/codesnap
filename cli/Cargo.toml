@@ -2,12 +2,17 @@
 name = "cli"
 version = "0.1.0"
 edition = "2021"
+description = "CLI tools for generating beautiful code snapshots"
+license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "codesnap"
+path = "src/main.rs"
 
 [dependencies]
 ansi_term = "0.12.1"
 anyhow = "1.0.91"
 clap = { version = "4.5.20", features = ["derive"] }
-codesnap = { path = "../core" }
+codesnap = { path = "../core", version = "0.2.0" }
 serde_json = "1.0.132"

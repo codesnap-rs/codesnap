@@ -9,6 +9,7 @@ use crate::{
 };
 use anyhow::bail;
 use arboard::ImageData;
+use chrono::format::parse;
 use tiny_skia::{Color, Pixmap};
 
 use crate::{
@@ -29,6 +30,8 @@ use crate::{
 };
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 
+use super::snapshot::Snapshot;
+
 const LINE_HEIGHT: f32 = 18.;
 const DEFAULT_WINDOW_MIN_WIDTH: f32 = 350.;
 
@@ -37,9 +40,9 @@ pub struct ImageSnapshot {
     svg_content: Option<String>,
 }
 
-impl ImageSnapshot {
+impl Snapshot for ImageSnapshot {
     /// Copy the code snapshot to the clipboard
-    pub fn copy(&self) -> anyhow::Result<()> {
+    fn copy(&self) -> anyhow::Result<()> {
         let mut clipboard = Clipboard::new()?;
 
         match &self.svg_content {
@@ -61,8 +64,8 @@ impl ImageSnapshot {
 
     /// Save the code snapshot to disk as PNG, please make sure you have set the `save_png`
     /// before calling this method
-    pub fn save(&self, save_path: &str) -> anyhow::Result<()> {
-        if !save_path.ends_with(".png") || !save_path.ends_with(".svg") {
+    fn save(&self, save_path: &str) -> anyhow::Result<()> {
+        if !save_path.ends_with(".png") && !save_path.ends_with(".svg") {
             bail!("The save_path must ends with .png or .svg");
         }
 
@@ -71,6 +74,26 @@ impl ImageSnapshot {
         self.pixmap.save_png(path)?;
 
         Ok(())
+    }
+}
+
+impl ImageSnapshot {
+    /// CodeSnap use tiny_skia to generate the image snapshot, and the format of generated image
+    /// is PNG, if you want a SVG code snapshot, you can use this method to convert the PNG to SVG
+    ///
+    /// WARNING: This method is not really convert the PNG to SVG, it encode PNG to Base64 and
+    /// format it to SVG, so the SVG file is still a image file, not a real SVG file. Base64
+    /// usually takes about 33% more space than the original data, so the SVG file size might be larger.
+    pub fn to_svg(mut self) -> Result<impl Snapshot, anyhow::Error> {
+        let png_data = self.pixmap.encode_png()?;
+        let encoded_base64_png_data = STANDARD.encode(png_data);
+        let parsed_svg_content = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image href="data:image/png;base64,{}"/></svg>"#,
+            encoded_base64_png_data.as_str()
+        );
+
+        self.svg_content = Some(parsed_svg_content);
+        Ok(self)
     }
 
     pub fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
@@ -167,25 +190,5 @@ impl ImageSnapshot {
             pixmap,
             svg_content: None,
         })
-    }
-}
-
-impl ImageSnapshot {
-    /// CodeSnap use tiny_skia to generate the image snapshot, and the format of generated image
-    /// is PNG, if you want a SVG code snapshot, you can use this method to convert the PNG to SVG
-    ///
-    /// WARNING: This method is not really convert the PNG to SVG, it encode PNG to Base64 and
-    /// format it to SVG, so the SVG file is still a image file, not a real SVG file. Base64
-    /// usually takes about 33% more space than the original data, so the SVG file size might be larger.
-    pub fn to_svg(&mut self) -> Result<&Self, anyhow::Error> {
-        let png_data = self.pixmap.encode_png()?;
-        let encoded_base64_png_data = STANDARD.encode(png_data);
-        let parsed_svg_content = format!(
-            r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image href="data:image/png;base64,{}"/></svg>"#,
-            encoded_base64_png_data.as_str()
-        );
-
-        self.svg_content = Some(parsed_svg_content);
-        Ok(self)
     }
 }

@@ -4,6 +4,8 @@ use crate::utils::code::{calc_max_line_number_length, calc_wh, prepare_code};
 
 use arboard::Clipboard;
 
+use super::snapshot::Snapshot;
+
 const SPACE_BOTH_SIDE: usize = 2;
 
 pub struct ASCIISnapshot {
@@ -18,18 +20,20 @@ fn optional(component: String, is_view: bool) -> String {
     }
 }
 
-impl ASCIISnapshot {
-    pub fn copy(&self) -> anyhow::Result<()> {
+impl Snapshot for ASCIISnapshot {
+    fn copy(&self) -> anyhow::Result<()> {
         Clipboard::new()?.set_text(self.content.as_str())?;
 
         Ok(())
     }
 
-    pub fn save(&self, _save_path: &str) -> anyhow::Result<()> {
+    fn save(&self, _save_path: &str) -> anyhow::Result<()> {
         todo!()
     }
+}
 
-    pub fn from_config(config: crate::config::SnapshotConfig) -> anyhow::Result<Self> {
+impl ASCIISnapshot {
+    pub fn from_config(config: crate::config::SnapshotConfig) -> anyhow::Result<impl Snapshot> {
         let code = prepare_code(&config.code.content);
         let (width, height) = calc_wh(&code, 1., 1.);
         let calc_line_number_width = |start_line_number: u32| {

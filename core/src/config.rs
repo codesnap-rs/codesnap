@@ -4,11 +4,11 @@ use tiny_skia::{Color, GradientStop};
 
 use crate::{
     preset_background::BAMBOO,
-    snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot},
+    snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot, snapshot::Snapshot},
     utils::color::RgbaColor,
 };
 
-pub const DEFAULT_WINDOW_MARGIN: f32 = 90.;
+pub const DEFAULT_WINDOW_MARGIN: f32 = 82.;
 
 #[derive(Clone, Serialize, Debug)]
 #[serde(untagged)]
@@ -309,8 +309,12 @@ impl CodeSnap {
 
 impl SnapshotConfig {
     /// Create a beautiful code snapshot from the config
-    pub fn create_snapshot(&self) -> anyhow::Result<ImageSnapshot, anyhow::Error> {
+    pub fn create_snapshot(&self) -> anyhow::Result<impl Snapshot, anyhow::Error> {
         ImageSnapshot::from_config(self.clone())
+    }
+
+    pub fn create_svg_snapshot(&self) -> anyhow::Result<impl Snapshot, anyhow::Error> {
+        ImageSnapshot::from_config(self.clone())?.to_svg()
     }
 
     /// Create a ASCII "snapshot" from the config, the ASCII "snapshot" is a text representation of
@@ -325,7 +329,7 @@ impl SnapshotConfig {
     /// code block, most markdown renderers will highlight the code block for you.
     ///
     /// The ASCII "snapshot" is really cool, hope you like it!
-    pub fn create_ascii_snapshot(&self) -> anyhow::Result<ASCIISnapshot> {
+    pub fn create_ascii_snapshot(&self) -> anyhow::Result<impl Snapshot, anyhow::Error> {
         ASCIISnapshot::from_config(self.clone())
     }
 }

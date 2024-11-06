@@ -166,6 +166,18 @@ pub struct Window {
     pub shadow: f32,
 }
 
+impl WindowBuilder {
+    pub fn from_window(window: Window) -> WindowBuilder {
+        WindowBuilder {
+            margin: Some(window.margin),
+            title: Some(window.title),
+            border: Some(window.border),
+            mac_window_bar: Some(window.mac_window_bar),
+            shadow: Some(window.shadow),
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum HighlightLine {
@@ -228,6 +240,21 @@ pub struct Code {
     pub file_path: Option<String>,
 }
 
+impl CodeBuilder {
+    pub fn from_code(code: Code) -> CodeBuilder {
+        CodeBuilder {
+            content: Some(code.content),
+            font_family: Some(code.font_family),
+            theme: Some(code.theme),
+            breadcrumbs: Some(code.breadcrumbs),
+            line_number: Some(code.line_number),
+            highlight_lines: Some(code.highlight_lines),
+            language: Some(code.language),
+            file_path: Some(code.file_path),
+        }
+    }
+}
+
 /// Draw a watermark below the code, you can use this to add a logo or any other text
 /// The watermark is designed as a place for users to provide personalize label
 #[derive(Serialize, Deserialize, Clone, Builder, Debug)]
@@ -243,8 +270,23 @@ pub struct Watermark {
     pub color: String,
 }
 
+impl WatermarkBuilder {
+    pub fn from_watermark(watermark: Option<Watermark>) -> WatermarkBuilder {
+        watermark
+            .and_then(|watermark| {
+                Some(WatermarkBuilder {
+                    content: Some(watermark.content),
+                    font_family: Some(watermark.font_family),
+                    color: Some(watermark.color),
+                })
+            })
+            .unwrap_or(WatermarkBuilder::default())
+    }
+}
+
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
+#[builder(derive(serde::Deserialize))]
 #[serde(rename_all = "camelCase")]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]
@@ -302,8 +344,41 @@ impl CodeSnap {
         Ok(())
     }
 
-    pub fn from_config(config: &str) -> Result<SnapshotConfig, serde_json::Error> {
-        serde_json::from_str::<SnapshotConfig>(config)
+    pub fn from_config(config: &str) -> Result<CodeSnap, serde_json::Error> {
+        serde_json::from_str::<CodeSnap>(config)
+    }
+
+    pub fn map_code<F>(&mut self, f: F) -> Result<&mut Self, CodeBuilderError>
+    where
+        F: Fn(Code) -> Result<Code, CodeBuilderError>,
+    {
+        if let Some(ref code) = self.code {
+            self.code = Some(f(code.clone())?);
+        }
+
+        Ok(self)
+    }
+
+    pub fn map_window<F>(&mut self, f: F) -> Result<&mut Self, WindowBuilderError>
+    where
+        F: Fn(Window) -> Result<Window, WindowBuilderError>,
+    {
+        if let Some(ref window) = self.window {
+            self.window = Some(f(window.clone())?);
+        }
+
+        Ok(self)
+    }
+
+    pub fn map_watermark<F>(&mut self, f: F) -> Result<&mut Self, WatermarkBuilderError>
+    where
+        F: Fn(Option<Watermark>) -> Result<Watermark, WatermarkBuilderError>,
+    {
+        if let Some(ref watermark) = self.watermark {
+            self.watermark = Some(Some(f(watermark.clone())?));
+        }
+
+        Ok(self)
     }
 }
 

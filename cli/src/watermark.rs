@@ -1,18 +1,26 @@
-use codesnap::config::{Code, CodeBuilder, Watermark, WatermarkBuilder, Window};
+use codesnap::config::{Watermark, WatermarkBuilder};
 
 use crate::CLI;
 
-pub fn create_watermark(cli: &CLI) -> anyhow::Result<Option<Watermark>> {
-    if let Some(ref watermark) = cli.watermark {
-        let mut watermark_builder = WatermarkBuilder::default();
-        let watermark = watermark_builder
+pub fn create_watermark(
+    cli: &CLI,
+    config_watermark: Option<Watermark>,
+) -> anyhow::Result<Option<Watermark>> {
+    if cli.watermark.is_none() && config_watermark.is_none() {
+        return Ok(None);
+    }
+
+    let watermark = if let Some(ref watermark) = cli.watermark {
+        let watermark = WatermarkBuilder::default()
             .color(&cli.watermark_color)
             .content(watermark)
             .font_family(&cli.watermark_font_family)
             .build()?;
 
-        return Ok(Some(watermark));
-    }
+        Some(watermark)
+    } else {
+        None
+    };
 
-    Ok(None)
+    Ok(config_watermark.or(watermark))
 }

@@ -348,35 +348,35 @@ impl CodeSnap {
         serde_json::from_str::<CodeSnap>(config)
     }
 
-    pub fn map_code<F>(&mut self, f: F) -> Result<&mut Self, CodeBuilderError>
+    pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where
-        F: Fn(Code) -> Result<Code, CodeBuilderError>,
+        F: Fn(Code) -> anyhow::Result<Code>,
     {
-        if let Some(ref code) = self.code {
-            self.code = Some(f(code.clone())?);
-        }
+        self.code = Some(f(self
+            .code
+            .clone()
+            .unwrap_or(CodeBuilder::default().content("").build()?))?);
 
         Ok(self)
     }
 
-    pub fn map_window<F>(&mut self, f: F) -> Result<&mut Self, WindowBuilderError>
+    pub fn map_window<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where
-        F: Fn(Window) -> Result<Window, WindowBuilderError>,
+        F: Fn(Window) -> anyhow::Result<Window>,
     {
-        if let Some(ref window) = self.window {
-            self.window = Some(f(window.clone())?);
-        }
+        self.window = Some(f(self
+            .window
+            .clone()
+            .unwrap_or(WindowBuilder::default().build()?))?);
 
         Ok(self)
     }
 
-    pub fn map_watermark<F>(&mut self, f: F) -> Result<&mut Self, WatermarkBuilderError>
+    pub fn map_watermark<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where
-        F: Fn(Option<Watermark>) -> Result<Watermark, WatermarkBuilderError>,
+        F: Fn(Option<Watermark>) -> anyhow::Result<Option<Watermark>>,
     {
-        if let Some(ref watermark) = self.watermark {
-            self.watermark = Some(Some(f(watermark.clone())?));
-        }
+        self.watermark = Some(f(self.watermark.clone().unwrap_or(None))?);
 
         Ok(self)
     }

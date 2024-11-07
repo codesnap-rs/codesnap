@@ -5,18 +5,19 @@ use codesnap::config::{Breadcrumbs, Code, CodeBuilder, HighlightLine};
 
 use crate::CLI;
 
-pub fn create_code(cli: &CLI) -> anyhow::Result<Code> {
+pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
     let code_snippet = get_code_snippet(cli)?;
-    let mut code_builder = CodeBuilder::default();
-    let mut code = code_builder
-        .content(&code_snippet)
-        .theme(&cli.code_theme)
-        .font_family(&cli.code_font_family)
-        .build()?;
+    let mut code_builder = CodeBuilder::from_code(config_code.clone());
+    let mut code = code_builder.content(&code_snippet).build()?;
 
-    code.file_path = cli.file.clone();
-    code.language = cli.language.clone();
-    code.breadcrumbs = create_breadcrumbs(&cli);
+    code.theme = cli.code_theme.clone().unwrap_or(config_code.theme);
+    code.font_family = cli
+        .code_font_family
+        .clone()
+        .unwrap_or(config_code.font_family);
+    code.file_path = cli.file.clone().or(config_code.file_path);
+    code.language = cli.language.clone().or(config_code.language);
+    code.breadcrumbs = create_breadcrumbs(&cli).or(config_code.breadcrumbs);
     code.highlight_lines = create_highlight_lines(&cli)?;
 
     Ok(code)

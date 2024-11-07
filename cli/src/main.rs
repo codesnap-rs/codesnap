@@ -3,12 +3,13 @@ mod logger;
 mod watermark;
 mod window;
 
+use std::fs::read_to_string;
+
 use clap::Parser;
 use clap::Subcommand;
 use code::create_code;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
-use codesnap::config::DEFAULT_WINDOW_MARGIN;
 use codesnap::snapshot::snapshot::Snapshot;
 use watermark::create_watermark;
 use window::create_window;
@@ -38,12 +39,12 @@ struct CLI {
     to_clipboard: bool,
 
     /// Font family for the code snippet
-    #[arg(long, default_value = "CaskaydiaCove Nerd Font")]
-    code_font_family: String,
+    #[arg(long)]
+    code_font_family: Option<String>,
 
     /// Code theme for the code snippet
-    #[arg(long, default_value = "base16-ocean.dark")]
-    code_theme: String,
+    #[arg(long)]
+    code_theme: Option<String>,
 
     /// Breadcrumbs is a useful and unique feature in CodeSnap, it shows the path of the file
     /// so that users can know where the code snippet comes from.
@@ -100,12 +101,12 @@ struct CLI {
     watermark_color: String,
 
     /// Set window shadow radius
-    #[arg(long, default_value_t = 20.)]
-    shadow: f32,
+    #[arg(long)]
+    shadow: Option<f32>,
 
     /// Display MacOS style window bar
-    #[arg(long, default_value_t = true)]
-    mac_window_bar: bool,
+    #[arg(long)]
+    mac_window_bar: Option<bool>,
 
     /// Display window border
     #[arg(long, default_value_t = true)]
@@ -116,12 +117,12 @@ struct CLI {
     border_color: String,
 
     /// Set horizontal margin of window
-    #[arg(long, default_value_t = DEFAULT_WINDOW_MARGIN)]
-    margin_x: f32,
+    #[arg(long)]
+    margin_x: Option<f32>,
 
     /// Set vertical margin of window
-    #[arg(long, default_value_t = DEFAULT_WINDOW_MARGIN)]
-    margin_y: f32,
+    #[arg(long)]
+    margin_y: Option<f32>,
 
     /// Set title of the window
     #[arg(long)]
@@ -155,6 +156,9 @@ struct CLI {
     /// To generate ASCII snapshot ranther than image snapshot
     #[arg(long)]
     ascii: bool,
+
+    #[arg(long)]
+    config: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -171,18 +175,24 @@ struct Args {
 
 fn generate_snapshot() -> anyhow::Result<()> {
     let cli = CLI::parse();
-    let code = create_code(&cli)?;
-    let watermark = create_watermark(&cli)?;
-    let window = create_window(&cli)?;
-    let mut codesnap = CodeSnap::default()
-        .code(code)
-        .watermark(watermark)
-        .window(window)
+
+    let mut codesnap_default = if let Some(ref config) = cli.config {
+        let content = read_to_string(config)?;
+
+        CodeSnap::from_config(&content)?
+    } else {
+        CodeSnap::default()
+    };
+
+    let mut codesnap = codesnap_default
+        .map_code(|code| create_code(&cli, code))?
+        .map_watermark(|watermark| create_watermark(&cli, watermark))?
+        .map_window(|window| create_window(&cli, window))?
         .scale_factor(cli.scale_factor)
         .build()?;
 
-    codesnap.themes_folder = cli.themes_folder.clone();
-    codesnap.fonts_folder = cli.fonts_folder.clone();
+    codesnap.themes_folder = cli.themes_folder.clone().or(codesnap.themes_folder);
+    codesnap.fonts_folder = cli.fonts_folder.clone().or(codesnap.fonts_folder);
 
     if cli.ascii {
         execute(&cli, codesnap.create_ascii_snapshot()?, codesnap)?;

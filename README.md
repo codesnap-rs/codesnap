@@ -21,6 +21,50 @@ Generally, you can directly use CLI tool provide by CodeSnap to generate code sn
 <img src="https://github.com/user-attachments/assets/b8c9490f-ce17-4881-9d36-72e9c17bf34b" width="580px" />
 
 
+## Install
+CodeSnap provide two ways to use it, you can use it as a CLI tool or as a library in your own project.
+
+### CLI
+For CLI tool, you can install it via `cargo`:
+
+```bash
+cargo install codesnap-cli
+
+# Run codesnap to generate code snapshot by providing code file
+codesnap -f ./code_snippet.hs -o "./output.png"
+
+# Run codesnap --help to see more information
+codesnap -h
+```
+
+Read more about [codesnap cli]()
+
+### Library
+For library, you can add it to your `Cargo.toml`:
+
+```toml
+[dependencies]
+codesnap = "0.3.1"
+```
+
+Use `CodeSnap` builder to generate code snapshot:
+
+```rust
+let snapshot = CodeSnap::default()
+        .code("fn main() { println!(\"Hello, world!\"); }")
+        .watermark(WatermarkBuilder::default().content("CodeSnap").build()?)
+        .build()?
+        .create_snapshot()?;
+
+// Save snapshot to file
+snapshot.save("output.png")?;
+
+// Copy snapshot to clipboard 
+snapshot.copy_to_clipboard()?;
+```
+
+Read more about [codesnap library]()
+
 ## Related projects
 - [codesnap-cli]()
 - [codesnap.nvim]()

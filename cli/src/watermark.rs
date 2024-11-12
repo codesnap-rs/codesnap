@@ -10,17 +10,33 @@ pub fn create_watermark(
         return Ok(None);
     }
 
-    let watermark = if let Some(ref watermark) = cli.watermark {
-        let watermark = WatermarkBuilder::default()
-            .color(&cli.watermark_color)
-            .content(watermark)
-            .font_family(&cli.watermark_font_family)
-            .build()?;
+    let watermark = config_watermark
+        .as_ref()
+        .and_then(|watermark| Some(watermark.content.clone()))
+        .or(cli.watermark.clone())
+        .and_then(|content| {
+            Some(
+                WatermarkBuilder::default()
+                    .color(
+                        cli.watermark_color
+                            .clone()
+                            .or(config_watermark
+                                .as_ref()
+                                .and_then(|watermark| Some(watermark.color.clone())))
+                            .unwrap_or(String::from("#ffffff")),
+                    )
+                    .content(content)
+                    .font_family(
+                        &cli.watermark_font_family
+                            .clone()
+                            .or(config_watermark
+                                .and_then(|watermark| Some(watermark.font_family.clone())))
+                            .unwrap_or(String::from("Pacifico")),
+                    )
+                    .build()
+                    .unwrap(),
+            )
+        });
 
-        Some(watermark)
-    } else {
-        None
-    };
-
-    Ok(config_watermark.or(watermark))
+    Ok(watermark)
 }

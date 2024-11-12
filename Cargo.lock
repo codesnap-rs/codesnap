@@ -372,6 +372,7 @@ dependencies = [
  "anyhow",
  "clap",
  "codesnap",
+ "home",
  "serde_json",
 ]
 

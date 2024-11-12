@@ -1,4 +1,5 @@
 mod code;
+mod config;
 mod logger;
 mod watermark;
 mod window;
@@ -93,12 +94,12 @@ struct CLI {
     watermark: Option<String>,
 
     /// Watermark font family
-    #[arg(long, default_value = "Pacifico")]
-    watermark_font_family: String,
+    #[arg(long)]
+    watermark_font_family: Option<String>,
 
     /// Watermark font color
-    #[arg(long, default_value = "#ffffff")]
-    watermark_color: String,
+    #[arg(long)]
+    watermark_color: Option<String>,
 
     /// Set window shadow radius
     #[arg(long)]
@@ -181,7 +182,7 @@ fn generate_snapshot() -> anyhow::Result<()> {
 
         CodeSnap::from_config(&content)?
     } else {
-        CodeSnap::default()
+        CodeSnap::from_config(&config::get_config_content()?)?
     };
 
     let mut codesnap = codesnap_default
@@ -206,15 +207,21 @@ fn generate_snapshot() -> anyhow::Result<()> {
 // Execute copy or save action to consuming snapshot
 fn execute(cli: &CLI, snapshot: impl Snapshot, codesnap: SnapshotConfig) -> anyhow::Result<()> {
     if cli.to_clipboard {
-        return snapshot.copy();
+        snapshot.copy()?;
+
+        logger::success("Snapshot copied to clipboard");
+
+        return Ok(());
     }
 
     if let Some(ref output) = cli.output {
         if output.ends_with(".svg") {
-            return codesnap.create_svg_snapshot()?.save(&output);
+            codesnap.create_svg_snapshot()?.save(&output)?;
+        } else {
+            snapshot.save(&output)?;
         }
 
-        snapshot.save(&output)?;
+        logger::success(&format!("Snapshot saved to {}", output));
     }
 
     Ok(())

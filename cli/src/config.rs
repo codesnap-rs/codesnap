@@ -14,12 +14,12 @@ const DEFAULT_CONFIG_CONTENT: &'static str = r##"{
   },
   "code": {
     "fontFamily": "CaskaydiaCove Nerd Font",
-    "theme": "base16-ocean.light"
+    "theme": "base16-ocean.dark"
   },
   "watermark": {
     "content": "CodeSnap",
     "fontFamily": "Pacifico",
-    "color": "#ff0000"
+    "color": "#ffffff"
   },
   "background":  {
     "start": {

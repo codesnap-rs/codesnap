@@ -6,8 +6,11 @@ use crate::{
     },
     utils::code::{calc_wh_with_min_width, prepare_code, CHAR_WIDTH},
     utils::highlight::Highlight,
-    utils::text::FontRenderer,
+    utils::text::{create_file_system_from_binary, FontRenderer},
 };
+
+const CASKAYDIA_COVE_NERD_FONT: &[u8] =
+    include_bytes!("../../../assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf");
 
 pub struct Code {
     children: Vec<Box<dyn Component>>,
@@ -44,7 +47,10 @@ impl Component for Code {
             self.font_size,
             self.line_height,
             context.scale_factor,
-            context.take_snapshot_params.fonts_folder.clone(),
+            create_file_system_from_binary(
+                CASKAYDIA_COVE_NERD_FONT,
+                &context.take_snapshot_params.fonts_folder,
+            ),
         )
         .draw_text(
             render_params.x,

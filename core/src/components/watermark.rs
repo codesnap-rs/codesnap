@@ -4,7 +4,10 @@ use tiny_skia::Pixmap;
 use crate::{
     config,
     edges::margin::Margin,
-    utils::{color::parse_hex_to_cosmic_color, text::FontRenderer},
+    utils::{
+        color::parse_hex_to_cosmic_color,
+        text::{create_file_system_from_binary, FontRenderer},
+    },
 };
 
 use super::interface::{
@@ -17,6 +20,8 @@ pub struct Watermark {
     children: Vec<Box<dyn Component>>,
     config: Option<config::Watermark>,
 }
+
+const PACIFICO_FONT: &[u8] = include_bytes!("../../assets/fonts/Pacifico-Regular.ttf");
 
 impl Component for Watermark {
     fn draw_self(
@@ -36,7 +41,10 @@ impl Component for Watermark {
             20.,
             20.,
             context.scale_factor,
-            context.take_snapshot_params.fonts_folder.clone(),
+            create_file_system_from_binary(
+                PACIFICO_FONT,
+                &context.take_snapshot_params.fonts_folder,
+            ),
         )
         .draw_line(
             0.,

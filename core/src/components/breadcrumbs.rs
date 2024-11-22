@@ -6,7 +6,7 @@ use regex::Regex;
 use crate::{
     config,
     edges::margin::Margin,
-    utils::text::FontRenderer,
+    utils::text::{create_file_system_by_fonts_folder, FontRenderer},
     utils::{code::calc_wh_with_min_width, color::RgbaColor},
 };
 
@@ -74,7 +74,7 @@ impl Component for Breadcrumbs {
                 12.,
                 LINE_HEIGHT,
                 context.scale_factor,
-                context.take_snapshot_params.fonts_folder.clone(),
+                create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
             )
             .draw_text(
                 render_params.x,

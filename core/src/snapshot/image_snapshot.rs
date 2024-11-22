@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::bail;
 use arboard::ImageData;
-use chrono::format::parse;
 use tiny_skia::{Color, Pixmap};
 
 use crate::{

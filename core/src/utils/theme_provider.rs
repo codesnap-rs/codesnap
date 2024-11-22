@@ -1,10 +1,13 @@
 use syntect::{
+    dumps::from_binary,
     easy::HighlightLines,
     highlighting::{Color, Theme, ThemeSet},
     parsing::{SyntaxReference, SyntaxSet},
 };
 
 use crate::components::interface::render_error::{self, RenderError};
+
+const CANDY_THEME: &[u8] = include_bytes!("../../assets/themes/candy.themedump");
 
 pub struct ThemeColor(Color);
 
@@ -52,7 +55,7 @@ impl ThemeProvider {
         let theme_set = match themes_folder {
             Some(theme_folder) => ThemeSet::load_from_folder(theme_folder)
                 .map_err(|_| RenderError::HighlightThemeLoadFailed)?,
-            None => ThemeSet::load_defaults(),
+            None => from_binary(CANDY_THEME),
         };
         let theme = theme_set.themes.get(theme).unwrap().to_owned();
         let syntax_set = two_face::syntax::extra_newlines();

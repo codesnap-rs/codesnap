@@ -211,7 +211,7 @@ pub struct Code {
     /// themes), you can use the theme name to specify the theme you want to use.
     ///
     /// See `themes_folder` config for more detail.
-    #[builder(setter(into), default = String::from("base16-ocean.dark"))]
+    #[builder(setter(into), default = String::from("candy"))]
     pub theme: String,
 
     /// Breadcrumbs is a useful and unique feature of CodeSnap, it can help users to understand the

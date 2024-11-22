@@ -8,7 +8,10 @@ use crate::{
     },
     config::TitleConfig,
     edges::margin::Margin,
-    utils::{color::parse_hex_to_cosmic_color, text::FontRenderer},
+    utils::{
+        color::parse_hex_to_cosmic_color,
+        text::{create_file_system_by_fonts_folder, FontRenderer},
+    },
 };
 
 pub struct Title {
@@ -54,7 +57,7 @@ impl Component for Title {
             10.,
             10.,
             context.scale_factor,
-            context.take_snapshot_params.fonts_folder.clone(),
+            create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
         )
         .draw_line(
             0.,

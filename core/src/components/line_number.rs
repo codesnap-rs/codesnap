@@ -3,7 +3,11 @@ use super::interface::{
     render_error,
     style::{ComponentStyle, RawComponentStyle, Size, Style},
 };
-use crate::{edges::margin::Margin, utils::code::CHAR_WIDTH, utils::text::FontRenderer};
+use crate::{
+    edges::margin::Margin,
+    utils::text::FontRenderer,
+    utils::{code::CHAR_WIDTH, text::create_file_system_by_fonts_folder},
+};
 use cosmic_text::{Attrs, Color, Family};
 
 const FONT_SIZE: f32 = 14.;
@@ -50,7 +54,7 @@ impl Component for LineNumber {
             FONT_SIZE,
             self.line_height,
             context.scale_factor,
-            context.take_snapshot_params.fonts_folder.clone(),
+            create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
         )
         .draw_text(
             render_params.x,

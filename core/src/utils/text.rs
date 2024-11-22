@@ -15,15 +15,8 @@ impl FontRenderer {
         font_size: f32,
         line_height: f32,
         scale_factor: f32,
-        fonts_folder: Option<String>,
+        font_system: FontSystem,
     ) -> FontRenderer {
-        let mut font_system = FontSystem::new();
-
-        // If user has provided a custom fonts folder, load fonts from it
-        if let Some(fonts_folder) = fonts_folder {
-            font_system.db_mut().load_fonts_dir(fonts_folder);
-        }
-
         let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
 
         FontRenderer {
@@ -121,4 +114,22 @@ impl FontRenderer {
             },
         );
     }
+}
+
+pub fn create_file_system_by_fonts_folder(fonts_folder: &Option<String>) -> FontSystem {
+    let mut font_system = FontSystem::new();
+
+    // If user has provided a custom fonts folder, load fonts from it
+    if let Some(fonts_folder) = fonts_folder {
+        font_system.db_mut().load_fonts_dir(fonts_folder);
+    }
+
+    font_system
+}
+
+pub fn create_file_system_from_binary(binary: &[u8], fonts_folder: &Option<String>) -> FontSystem {
+    let mut font_system = create_file_system_by_fonts_folder(fonts_folder);
+
+    font_system.db_mut().load_font_data(binary.into());
+    font_system
 }

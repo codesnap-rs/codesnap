@@ -49,11 +49,48 @@ jobs:
           github_token: ${{ secrets.PAT }}
           custom_tag: ${{ steps.read_toml.outputs.value }}
 
+      - name: Build changelog for main repository
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          token: ${{ secrets.PAT }}
+          toTag: ${{ steps.tag_version.outputs.new_tag }}
+          configurationJson: |
+            {
+              "categories": [
+                {
+                    "title": "## 🚀 What's Changed in ${{ steps.tag_version.outputs.new_tag }}:",
+                    "labels": []
+                }
+              ],
+              "pr_template": "- #{{TITLE}} by #{{AUTHOR}}	in #{{NUMBER}}",
+              "template": "#{{CHANGELOG}}\n\n**Full Changelog**: https://github.com/mistricky/CodeSnap/compare/#{{FROM_TAG}}...#{{TO_TAG}}"
+            }
+
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
-          generateReleaseNotes: true
           token: ${{ secrets.PAT }}
+          body: |
+            ## 👋 Hi, there!
+            Thanks for using CodeSnap! The most beautiful code screenshots tool.
 
+            ## 💻 Getting started
+            Treat CodeSnap as library in your project by Cargo:
+
+            ```bash
+            Cargo add CodeSnap
+            ```
+
+            Use CodeSnap as CLI tool installed globally:
+
+            **Cargo**
+            ```bash
+            Cargo install CodeSnap
+            ```
+
+            Or you can install CodeSnap manually by downloading the following binaries.
+
+            ${{steps.build_changelog.outputs.changelog}}

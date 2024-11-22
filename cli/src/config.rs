@@ -14,7 +14,7 @@ const DEFAULT_CONFIG_CONTENT: &'static str = r##"{
   },
   "code": {
     "fontFamily": "CaskaydiaCove Nerd Font",
-    "theme": "base16-ocean.dark"
+    "theme": "candy"
   },
   "watermark": {
     "content": "CodeSnap",

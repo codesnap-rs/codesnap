@@ -7,7 +7,7 @@ fn pretty_print(bg: Colour, level: &str, content: &str) {
             .on(bg)
             .fg(Colour::RGB(255, 255, 255))
             .paint(format!(" {} ", level)),
-        content
+        Style::new().fg(bg).paint(format!(" {}", content))
     );
 }
 
@@ -17,6 +17,10 @@ pub fn info(content: &str) {
 
 pub fn success(content: &str) {
     pretty_print(Colour::Green, "SUCCESS", content);
+}
+
+pub fn warn(content: &str) {
+    pretty_print(Colour::Yellow, "WARN", content)
 }
 
 pub fn error(content: &str) {

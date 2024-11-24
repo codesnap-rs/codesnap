@@ -10,10 +10,12 @@ pub fn create_watermark(
         return Ok(None);
     }
 
-    let watermark = config_watermark
-        .as_ref()
-        .and_then(|watermark| Some(watermark.content.clone()))
-        .or(cli.watermark.clone())
+    let watermark = cli
+        .watermark
+        .clone()
+        .or(config_watermark
+            .clone()
+            .and_then(|config_watermark| Some(config_watermark.content)))
         .and_then(|content| {
             Some(
                 WatermarkBuilder::default()

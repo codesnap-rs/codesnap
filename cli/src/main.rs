@@ -28,7 +28,7 @@ struct CLI {
     file: Option<String>,
 
     /// Code snippet for snapshot
-    #[arg(short, long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..1, value_parser=value_parser!(String))]
+    #[arg(short, long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..=1, value_parser=value_parser!(String), value_name="Code")]
     code: Option<String>,
 
     /// Output path for the snapshot, currently CodeSnap supports SVG format and PNG format

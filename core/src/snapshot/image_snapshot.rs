@@ -35,7 +35,7 @@ pub struct ImageSnapshot {
 
 impl ImageSnapshot {
     pub fn raw_data(&self) -> Result<SnapshotData, anyhow::Error> {
-        Ok(SnapshotData::from_pixmap(&self.pixmap, true)?)
+        Ok(SnapshotData::from_pixmap(&self.pixmap, false)?)
     }
 
     pub fn png_data(&self) -> Result<SnapshotData, anyhow::Error> {

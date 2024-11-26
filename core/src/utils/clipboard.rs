@@ -44,4 +44,8 @@ impl Clipboard {
 
         Ok(())
     }
+
+    pub fn read(&mut self) -> Result<String> {
+        self.aboard_clipboard.get_text()
+    }
 }

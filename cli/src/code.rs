@@ -6,7 +6,10 @@ use std::{
 
 use anyhow::bail;
 use clap::CommandFactory;
-use codesnap::config::{Breadcrumbs, Code, CodeBuilder, HighlightLine};
+use codesnap::{
+    config::{Breadcrumbs, Code, CodeBuilder, HighlightLine},
+    utils::clipboard::Clipboard,
+};
 
 use crate::{CLI, STDIN_CODE_DEFAULT_CHAR};
 
@@ -36,56 +39,49 @@ fn create_highlight_lines(cli: &CLI) -> Result<Vec<HighlightLine>, serde_json::E
 }
 
 fn create_breadcrumbs(cli: &CLI) -> Option<Breadcrumbs> {
-    if cli.has_breadcrumbs {
-        return Some(Breadcrumbs {
-            separator: cli.breadcrumbs_separator.clone(),
-            font_family: cli.breadcrumbs_font_family.clone(),
-            color: cli
-                .breadcrumbs_color
-                .clone()
-                .unwrap_or(String::from("#80848b")),
-        });
-    }
-
-    None
+    cli.has_breadcrumbs.then(|| Breadcrumbs {
+        separator: cli.breadcrumbs_separator.clone(),
+        font_family: cli.breadcrumbs_font_family.clone(),
+        color: cli
+            .breadcrumbs_color
+            .clone()
+            .unwrap_or(String::from("#80848b")),
+    })
 }
 
 fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
-    if cli.from_file.is_some() && cli.from_code.is_some() {
-        bail!("You can only specify one of the file or code option");
+    if let Some(ref file_path) = cli.from_file {
+        if !metadata(file_path)?.is_file() {
+            bail!("The file path is not a file");
+        }
+
+        return Ok(read_to_string(file_path)?);
     }
 
-    if cli.from_file.is_none() && cli.from_code.is_none() {
-        bail!("You must specify one of the file or code option");
-    }
-
-    match cli.from_file {
-        Some(ref file_path) => {
-            if !metadata(&file_path)?.is_file() {
-                bail!("The file path is not a file");
+    if let Some(ref code) = cli.from_code {
+        // Read code from pipe if the code option is "-"
+        return Ok(if code == STDIN_CODE_DEFAULT_CHAR {
+            // If input come from terminal, print help and exit
+            if stdin().is_terminal() {
+                CLI::command().print_help()?;
+                process::exit(2);
             }
 
-            Ok(read_to_string(file_path)?)
-        }
-        None => {
-            let code = cli.from_code.clone().unwrap();
+            let mut content = String::new();
 
-            // Read code from pipe if the code option is "-"
-            if code == STDIN_CODE_DEFAULT_CHAR {
-                // If input come from terminal, print help and exit
-                if stdin().is_terminal() {
-                    CLI::command().print_help()?;
-                    process::exit(2);
-                }
+            BufReader::new(stdin().lock()).read_to_string(&mut content)?;
 
-                let mut content = String::new();
-
-                BufReader::new(stdin().lock()).read_to_string(&mut content)?;
-
-                return Ok(content);
-            }
-
-            Ok(code)
-        }
+            content
+        } else {
+            code.clone()
+        });
     }
+
+    if cli.from_clipboard {
+        let content = Clipboard::new()?.read()?;
+
+        return Ok(content);
+    }
+
+    bail!("No code snippet provided");
 }

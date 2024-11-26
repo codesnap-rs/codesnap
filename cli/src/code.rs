@@ -20,7 +20,7 @@ pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
         .code_font_family
         .clone()
         .unwrap_or(config_code.font_family);
-    code.file_path = cli.file.clone().or(config_code.file_path);
+    code.file_path = cli.from_file.clone().or(config_code.file_path);
     code.language = cli.language.clone().or(config_code.language);
     code.breadcrumbs = create_breadcrumbs(&cli).or(config_code.breadcrumbs);
     code.highlight_lines = create_highlight_lines(&cli)?;
@@ -51,15 +51,15 @@ fn create_breadcrumbs(cli: &CLI) -> Option<Breadcrumbs> {
 }
 
 fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
-    if cli.file.is_some() && cli.code.is_some() {
+    if cli.from_file.is_some() && cli.from_code.is_some() {
         bail!("You can only specify one of the file or code option");
     }
 
-    if cli.file.is_none() && cli.code.is_none() {
+    if cli.from_file.is_none() && cli.from_code.is_none() {
         bail!("You must specify one of the file or code option");
     }
 
-    match cli.file {
+    match cli.from_file {
         Some(ref file_path) => {
             if !metadata(&file_path)?.is_file() {
                 bail!("The file path is not a file");
@@ -68,7 +68,7 @@ fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
             Ok(read_to_string(file_path)?)
         }
         None => {
-            let code = cli.code.clone().unwrap();
+            let code = cli.from_code.clone().unwrap();
 
             // Read code from pipe if the code option is "-"
             if code == STDIN_CODE_DEFAULT_CHAR {

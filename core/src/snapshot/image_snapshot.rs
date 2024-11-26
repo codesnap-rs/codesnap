@@ -2,13 +2,8 @@ use std::sync::Arc;
 
 use crate::{
     config::{Border, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
-    utils::{
-        clipboard::Clipboard, color::RgbaColor, path::parse_file_name,
-        theme_provider::ThemeProvider,
-    },
+    utils::{color::RgbaColor, theme_provider::ThemeProvider},
 };
-use anyhow::bail;
-use arboard::ImageData;
 use tiny_skia::{Color, Pixmap};
 
 use crate::{
@@ -29,80 +24,64 @@ use crate::{
 };
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 
-use super::snapshot::Snapshot;
+use super::snapshot_data::SnapshotData;
 
 const LINE_HEIGHT: f32 = 18.;
 const DEFAULT_WINDOW_MIN_WIDTH: f32 = 350.;
 
 pub struct ImageSnapshot {
     pixmap: Pixmap,
-    svg_content: Option<String>,
 }
 
-impl Snapshot for ImageSnapshot {
-    /// Copy the code snapshot to the clipboard
-    fn copy(&self) -> anyhow::Result<()> {
-        let mut clipboard = Clipboard::new()?;
-
-        match &self.svg_content {
-            Some(svg_content) => clipboard.set_text(svg_content)?,
-            None => {
-                let colors = self.pixmap.data();
-                let image_data = ImageData {
-                    width: self.pixmap.width() as usize,
-                    height: self.pixmap.height() as usize,
-                    bytes: colors.into(),
-                };
-
-                clipboard.set_image(image_data)?;
-            }
-        }
-
-        Ok(())
+impl ImageSnapshot {
+    pub fn raw_data(&self) -> Result<SnapshotData, anyhow::Error> {
+        Ok(SnapshotData::from_pixmap(&self.pixmap, true)?)
     }
 
-    /// Save the code snapshot to disk as PNG, please make sure you have set the `save_png`
-    /// before calling this method
-    fn save(&self, save_path: &str) -> anyhow::Result<()> {
-        if !save_path.ends_with(".png") && !save_path.ends_with(".svg") {
-            bail!("The save_path must ends with .png or .svg");
-        }
+    pub fn png_data(&self) -> Result<SnapshotData, anyhow::Error> {
+        Ok(SnapshotData::from_pixmap(&self.pixmap, true)?)
+    }
 
-        let path = parse_file_name(save_path)?;
+    pub fn svg_data(&self) -> Result<SnapshotData, anyhow::Error> {
+        Ok(SnapshotData::Text(self.to_svg()?))
+    }
 
-        self.pixmap.save_png(path)?;
-
-        Ok(())
+    pub fn html_data(&self) -> Result<SnapshotData, anyhow::Error> {
+        Ok(SnapshotData::Text(self.to_html()?))
     }
 }
 
 impl ImageSnapshot {
+    pub fn to_html(&self) -> Result<String, anyhow::Error> {
+        Ok(format!(
+            r#"<img src="data:image/png;base64,{}" />"#,
+            self.to_base64()?
+        ))
+    }
+
+    pub fn to_base64(&self) -> Result<String, anyhow::Error> {
+        let png_data = self.pixmap.encode_png()?;
+
+        Ok(STANDARD.encode(png_data))
+    }
+
     /// CodeSnap use tiny_skia to generate the image snapshot, and the format of generated image
     /// is PNG, if you want a SVG code snapshot, you can use this method to convert the PNG to SVG
     ///
     /// WARNING: This method is not really convert the PNG to SVG, it encode PNG to Base64 and
     /// format it to SVG, so the SVG file is still a image file, not a real SVG file. Base64
     /// usually takes about 33% more space than the original data, so the SVG file size might be larger.
-    pub fn to_svg(mut self) -> Result<impl Snapshot, anyhow::Error> {
-        let png_data = self.pixmap.encode_png()?;
-        let encoded_base64_png_data = STANDARD.encode(png_data);
+    pub fn to_svg(&self) -> Result<String, anyhow::Error> {
         let parsed_svg_content = format!(
             r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image href="data:image/png;base64,{}"/></svg>"#,
-            encoded_base64_png_data.as_str()
+            self.to_base64()?.as_str()
         );
 
-        self.svg_content = Some(parsed_svg_content);
-        Ok(self)
+        Ok(parsed_svg_content)
     }
 
     pub fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
-        let theme_provider = ThemeProvider::from(
-            config.themes_folder.clone(),
-            &config.code.theme,
-            config.code.language.clone(),
-            config.code.file_path.clone(),
-            &config.code.content,
-        )?;
+        let theme_provider = ThemeProvider::from_config(&config)?;
         let editor_background_color = theme_provider.theme_background();
         let context = ComponentContext {
             scale_factor: config.scale_factor as f32,
@@ -185,9 +164,6 @@ impl ImageSnapshot {
         ))])
         .draw_root(&context)?;
 
-        Ok(ImageSnapshot {
-            pixmap,
-            svg_content: None,
-        })
+        Ok(ImageSnapshot { pixmap })
     }
 }

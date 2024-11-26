@@ -1,3 +1,5 @@
+use std::process;
+
 use ansi_term::{Colour, Style};
 
 fn pretty_print(bg: Colour, level: &str, content: &str) {
@@ -25,4 +27,5 @@ pub fn warn(content: &str) {
 
 pub fn error(content: &str) {
     pretty_print(Colour::Red, "ERROR", content);
+    process::exit(1);
 }

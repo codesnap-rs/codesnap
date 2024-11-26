@@ -11,9 +11,13 @@ use clap::Parser;
 use code::create_code;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
-use codesnap::snapshot::snapshot::Snapshot;
 use watermark::create_watermark;
 use window::create_window;
+
+// use std::thread;
+use std::time::Duration;
+
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub const STDIN_CODE_DEFAULT_CHAR: &'static str = "-";
 
@@ -34,12 +38,8 @@ struct CLI {
     /// Output path for the snapshot, currently CodeSnap supports SVG format and PNG format
     /// If output is directory, CodeSnap will generate a temporary file name to save the snapshot
     /// to the directory.
-    #[arg(short, long)]
-    output: Option<String>,
-
-    /// Copy the snapshot to clipboard
-    #[arg(long)]
-    to_clipboard: bool,
+    #[arg(short, long, default_value = "clipboard")]
+    output: String,
 
     /// Font family for the code snippet
     #[arg(long)]
@@ -156,9 +156,8 @@ struct CLI {
     #[arg(long)]
     background: Option<String>,
 
-    /// To generate ASCII snapshot ranther than image snapshot
-    #[arg(long)]
-    ascii: bool,
+    #[arg(long, value_parser=["ascii", "image"], default_value="image")]
+    r#type: String,
 
     #[arg(long)]
     config: Option<String>,
@@ -172,12 +171,56 @@ struct Args {
 
 fn generate_snapshot() -> anyhow::Result<()> {
     let cli = CLI::parse();
+    let snapshot = create_snapshot_config(&cli)?;
+    let snapshot_type = cli.r#type;
 
-    if cli.output.is_none() && !cli.to_clipboard {
-        logger::warn("You have not specified any output option, CodeSnap will do nothing");
+    if snapshot_type == "ascii" && cli.output != "clipboard" {
+        logger::warn("ASCII snapshot only supports copying to clipboard");
         return Ok(());
     }
 
+    // Save snapshot to clipboard
+    if cli.output == "clipboard" {
+        match snapshot_type.as_str() {
+            "ascii" => {
+                snapshot.create_ascii_snapshot().raw_data()?.copy()?;
+            }
+            "image" => {
+                snapshot.create_snapshot()?.raw_data()?.copy()?;
+            }
+            _ => {
+                logger::error("Invalid snapshot type");
+            }
+        }
+
+        logger::success("Snapshot copied to clipboard");
+        return Ok(());
+    }
+
+    let image_snapshot = snapshot.create_snapshot()?;
+
+    // Save snapshot to file
+    match cli.output.as_str() {
+        output if output.ends_with(".png") => {
+            image_snapshot.png_data()?.save(&cli.output)?;
+        }
+        output if output.ends_with(".svg") => {
+            image_snapshot.svg_data()?.save(&cli.output)?;
+        }
+        output if output.ends_with(".html") => {
+            image_snapshot.html_data()?.save(&cli.output)?;
+        }
+        _ => {
+            logger::error("Unsupported output format");
+        }
+    }
+
+    logger::success(&format!("Snapshot saved to {} successful!", cli.output));
+
+    Ok(())
+}
+
+fn create_snapshot_config(cli: &CLI) -> anyhow::Result<SnapshotConfig> {
     // Create CodeSnap config from config, if the user does not have a config file, we will create
     // a default CodeSnap config to $HOME/.codesnap/config.json for the user.
     let mut codesnap_default = if let Some(ref config) = cli.config {
@@ -199,40 +242,26 @@ fn generate_snapshot() -> anyhow::Result<()> {
     codesnap.themes_folder = cli.themes_folder.clone().or(codesnap.themes_folder);
     codesnap.fonts_folder = cli.fonts_folder.clone().or(codesnap.fonts_folder);
 
-    if cli.ascii {
-        execute(&cli, codesnap.create_ascii_snapshot()?, codesnap)?;
-    } else {
-        execute(&cli, codesnap.create_snapshot()?, codesnap)?;
-    }
-
-    Ok(())
-}
-
-// Execute copy or save action to consuming snapshot
-fn execute(cli: &CLI, snapshot: impl Snapshot, codesnap: SnapshotConfig) -> anyhow::Result<()> {
-    if cli.to_clipboard {
-        snapshot.copy()?;
-
-        logger::success("Snapshot copied to clipboard");
-
-        return Ok(());
-    }
-
-    if let Some(ref output) = cli.output {
-        if output.ends_with(".svg") {
-            codesnap.create_svg_snapshot()?.save(&output)?;
-        } else {
-            snapshot.save(&output)?;
-        }
-
-        logger::success(&format!("Snapshot saved to {}", output));
-    }
-
-    Ok(())
+    Ok(codesnap)
 }
 
 fn main() {
+    let pb = ProgressBar::new_spinner();
+
+    pb.enable_steady_tick(Duration::from_millis(120));
+    pb.set_style(
+        ProgressStyle::with_template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&[
+                "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣯", "⣷", "⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠠",
+                "⠐", "⠈",
+            ]),
+    );
+    pb.set_message("Generating...");
+
     if let Err(err) = generate_snapshot() {
         logger::error(&err.to_string());
     }
+
+    pb.finish_and_clear();
 }

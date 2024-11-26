@@ -4,7 +4,7 @@ use tiny_skia::{Color, GradientStop};
 
 use crate::{
     preset_background::BAMBOO,
-    snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot, snapshot::Snapshot},
+    snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot},
     utils::color::RgbaColor,
 };
 
@@ -384,12 +384,8 @@ impl CodeSnap {
 
 impl SnapshotConfig {
     /// Create a beautiful code snapshot from the config
-    pub fn create_snapshot(&self) -> anyhow::Result<impl Snapshot, anyhow::Error> {
+    pub fn create_snapshot(&self) -> anyhow::Result<ImageSnapshot, anyhow::Error> {
         ImageSnapshot::from_config(self.clone())
-    }
-
-    pub fn create_svg_snapshot(&self) -> anyhow::Result<impl Snapshot, anyhow::Error> {
-        ImageSnapshot::from_config(self.clone())?.to_svg()
     }
 
     /// Create a ASCII "snapshot" from the config, the ASCII "snapshot" is a text representation of
@@ -404,7 +400,7 @@ impl SnapshotConfig {
     /// code block, most markdown renderers will highlight the code block for you.
     ///
     /// The ASCII "snapshot" is really cool, hope you like it!
-    pub fn create_ascii_snapshot(&self) -> anyhow::Result<impl Snapshot, anyhow::Error> {
+    pub fn create_ascii_snapshot(&self) -> ASCIISnapshot {
         ASCIISnapshot::from_config(self.clone())
     }
 }

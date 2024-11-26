@@ -5,7 +5,10 @@ use syntect::{
     parsing::{SyntaxReference, SyntaxSet},
 };
 
-use crate::components::interface::render_error::{self, RenderError};
+use crate::{
+    components::interface::render_error::{self, RenderError},
+    config::SnapshotConfig,
+};
 
 const CANDY_THEME: &[u8] = include_bytes!("../../assets/themes/candy.themedump");
 
@@ -13,9 +16,9 @@ pub struct ThemeColor(Color);
 
 #[derive(Debug, Clone)]
 pub struct ThemeProvider {
-    theme: Theme,
-    syntax: SyntaxReference,
-    syntax_set: SyntaxSet,
+    pub theme: Theme,
+    pub syntax: SyntaxReference,
+    pub syntax_set: SyntaxSet,
 }
 
 impl Into<tiny_skia::Color> for ThemeColor {
@@ -66,6 +69,16 @@ impl ThemeProvider {
             syntax,
             syntax_set,
         })
+    }
+
+    pub fn from_config(config: &SnapshotConfig) -> render_error::Result<ThemeProvider> {
+        ThemeProvider::from(
+            config.themes_folder.clone(),
+            &config.code.theme,
+            config.code.language.clone(),
+            config.code.file_path.clone(),
+            &config.code.content,
+        )
     }
 
     pub fn highlight(&self) -> (HighlightLines, &SyntaxSet) {

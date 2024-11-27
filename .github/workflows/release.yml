@@ -90,6 +90,11 @@ jobs:
             Cargo install codesnap-cli
             ```
 
+            **Homebrew**
+            ```bash
+            brew install mistricky/tap/CodeSnap
+            ```
+
             Of course, you can install CodeSnap manually by downloading the following binaries.
 
             ${{steps.build_changelog.outputs.changelog}}

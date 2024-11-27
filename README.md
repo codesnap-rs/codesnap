@@ -27,9 +27,19 @@ CodeSnap provide two ways to use it, you can use it as a CLI tool or as a librar
 ### CLI
 For CLI tool, you can install it via `cargo`:
 
+**Cargo**
 ```bash
 cargo install codesnap-cli
+```
 
+**Homebrew**
+```bash
+brew install mistricky/tap/CodeSnap
+```
+
+Use `codesnap` command to generate code snapshot:
+
+```bash
 # Run codesnap to generate code snapshot by providing code file
 codesnap -f ./code_snippet.hs -o "./output.png"
 

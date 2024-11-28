@@ -98,3 +98,11 @@ jobs:
             Of course, you can install CodeSnap manually by downloading the following binaries.
 
             ${{steps.build_changelog.outputs.changelog}}
+
+      - name: Update codesnap formula
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT }}
+          repository: mistricky/homebrew-tap
+          event-type: release
+          client-payload: '{"version": "${{ steps.tag_version.outputs.new_tag }}", "formula_name": "codesnap", "formula_desc": "Pure Rust tool to generate beautiful code snapshots"}'

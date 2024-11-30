@@ -107,7 +107,6 @@ pub enum Background {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct TitleConfig {
     #[builder(setter(into))]
     pub title: String,
@@ -129,7 +128,6 @@ pub struct Margin {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct Breadcrumbs {
     #[builder(setter(into, strip_option), default = None)]
     pub separator: Option<String>,
@@ -148,7 +146,6 @@ pub struct Border {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct Window {
     #[builder(setter(into, strip_option), default = Margin {x : DEFAULT_WINDOW_MARGIN, y: DEFAULT_WINDOW_MARGIN})]
     pub margin: Margin,
@@ -186,7 +183,6 @@ pub enum HighlightLine {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct LineNumber {
     #[builder(setter(into))]
     pub start_number: u32,
@@ -196,7 +192,6 @@ pub struct LineNumber {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct Code {
     #[builder(setter(into))]
     #[serde(default)]
@@ -258,7 +253,6 @@ impl CodeBuilder {
 /// Draw a watermark below the code, you can use this to add a logo or any other text
 /// The watermark is designed as a place for users to provide personalize label
 #[derive(Serialize, Deserialize, Clone, Builder, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct Watermark {
     #[builder(setter(into))]
     pub content: String,
@@ -287,7 +281,6 @@ impl WatermarkBuilder {
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
 #[builder(derive(serde::Deserialize))]
-#[serde(rename_all = "camelCase")]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]
     pub window: Window,

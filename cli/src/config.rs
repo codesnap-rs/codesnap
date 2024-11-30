@@ -3,45 +3,7 @@ use std::fs::{self, create_dir_all, read_to_string};
 use crate::logger;
 use anyhow::Context;
 
-const DEFAULT_CONFIG_CONTENT: &'static str = r##"{
-  "window": {
-    "macWindowBar": true,
-    "shadow": 20,
-    "margin": {
-      "x": 82,
-      "y": 82
-    }
-  },
-  "code": {
-    "fontFamily": "CaskaydiaCove Nerd Font",
-    "theme": "candy"
-  },
-  "watermark": {
-    "content": "CodeSnap",
-    "fontFamily": "Pacifico",
-    "color": "#ffffff"
-  },
-  "background":  {
-    "start": {
-      "x": 0,
-      "y": 0
-    },
-    "end": {
-      "x": "max",
-      "y": 0
-    },
-    "stops": [
-      {
-        "position": 0,
-        "color": "#6bcba5"
-      },
-      {
-        "position": 1,
-        "color": "#caf4c2"
-      }
-    ]
-  }
-}"##;
+const DEFAULT_CONFIG_CONTENT: &'static str = include_str!("../config.json");
 
 // Get CodeSnap config, create if the config does not exists
 pub fn get_config_content() -> anyhow::Result<String> {

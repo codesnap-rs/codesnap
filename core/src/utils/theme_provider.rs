@@ -5,6 +5,8 @@ use syntect::{
     parsing::{SyntaxReference, SyntaxSet},
 };
 
+use anyhow::Context;
+
 use crate::{
     components::interface::render_error::{self, RenderError},
     config::SnapshotConfig,
@@ -54,13 +56,17 @@ impl ThemeProvider {
         language: Option<String>,
         code_file_path: Option<String>,
         code: &str,
-    ) -> render_error::Result<ThemeProvider> {
+    ) -> anyhow::Result<ThemeProvider> {
         let theme_set = match themes_folder {
             Some(theme_folder) => ThemeSet::load_from_folder(theme_folder)
                 .map_err(|_| RenderError::HighlightThemeLoadFailed)?,
             None => from_binary(CANDY_THEME),
         };
-        let theme = theme_set.themes.get(theme).unwrap().to_owned();
+        let theme = theme_set
+            .themes
+            .get(theme)
+            .context(format!("Cannot find {} theme", theme))?
+            .to_owned();
         let syntax_set = two_face::syntax::extra_newlines();
         let syntax = ThemeProvider::guess_syntax(&syntax_set, language, code_file_path, code)?;
 
@@ -71,7 +77,7 @@ impl ThemeProvider {
         })
     }
 
-    pub fn from_config(config: &SnapshotConfig) -> render_error::Result<ThemeProvider> {
+    pub fn from_config(config: &SnapshotConfig) -> anyhow::Result<ThemeProvider> {
         ThemeProvider::from(
             config.themes_folder.clone(),
             &config.code.theme,

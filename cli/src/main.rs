@@ -6,6 +6,7 @@ mod window;
 
 use std::fs::read_to_string;
 
+use anyhow::bail;
 use clap::value_parser;
 use clap::Parser;
 use code::create_code;
@@ -172,19 +173,10 @@ struct CLI {
     config: Option<String>,
 }
 
-fn generate_snapshot() -> anyhow::Result<()> {
-    let cli = CLI::parse();
-    let snapshot = create_snapshot_config(&cli)?;
-    let snapshot_type = cli.r#type;
-
-    if snapshot_type == "ascii" && cli.output != "clipboard" {
-        logger::warn("ASCII snapshot only supports copying to clipboard");
-        return Ok(());
-    }
-
+fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<String> {
     // Save snapshot to clipboard
     if cli.output == "clipboard" {
-        match snapshot_type.as_str() {
+        match cli.r#type.as_str() {
             "ascii" => {
                 snapshot.create_ascii_snapshot().raw_data()?.copy()?;
             }
@@ -192,12 +184,11 @@ fn generate_snapshot() -> anyhow::Result<()> {
                 snapshot.create_snapshot()?.raw_data()?.copy()?;
             }
             _ => {
-                logger::error("Invalid snapshot type");
+                bail!("Invalid snapshot type");
             }
         }
 
-        logger::success("Snapshot copied to clipboard");
-        return Ok(());
+        return Ok("Snapshot copied to clipboard".to_string());
     }
 
     let image_snapshot = snapshot.create_snapshot()?;
@@ -214,11 +205,26 @@ fn generate_snapshot() -> anyhow::Result<()> {
             image_snapshot.html_data()?.save(&cli.output)?;
         }
         _ => {
-            logger::error("Unsupported output format");
+            bail!("Unsupported output format");
         }
+    };
+
+    Ok(format!("Snapshot saved to {} successful!", cli.output))
+}
+
+fn generate_snapshot() -> anyhow::Result<()> {
+    let cli = CLI::parse();
+    let snapshot = create_snapshot_config(&cli)?;
+    let snapshot_type = cli.r#type.clone();
+
+    if snapshot_type == "ascii" && cli.output != "clipboard" {
+        logger::warn("ASCII snapshot only supports copying to clipboard");
+        return Ok(());
     }
 
-    logger::success(&format!("Snapshot saved to {} successful!", cli.output));
+    let message = with_spinner(|| output_snapshot(&cli, &snapshot))?;
+
+    logger::success(&message);
 
     Ok(())
 }
@@ -248,7 +254,7 @@ fn create_snapshot_config(cli: &CLI) -> anyhow::Result<SnapshotConfig> {
     Ok(codesnap)
 }
 
-fn main() {
+fn with_spinner<T>(cb: impl Fn() -> T) -> T {
     let pb = ProgressBar::new_spinner();
 
     pb.enable_steady_tick(Duration::from_millis(120));
@@ -262,9 +268,14 @@ fn main() {
     );
     pb.set_message("Generating...");
 
+    let result = cb();
+
+    pb.finish_and_clear();
+    result
+}
+
+fn main() {
     if let Err(err) = generate_snapshot() {
         logger::error(&err.to_string());
     }
-
-    pb.finish_and_clear();
 }

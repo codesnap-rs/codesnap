@@ -1,6 +1,6 @@
 {
   "window": {
-    "mac_window_bar": false,
+    "mac_window_bar": true,
     "shadow": 20,
     "margin": {
       "x": 82,
@@ -28,7 +28,7 @@
     "stops": [
       {
         "position": 0,
-        "color": "#ff0000"
+        "color": "#6bcba5"
       },
       {
         "position": 1,

@@ -128,3 +128,22 @@ pub static DUSK: Lazy<Background> = Lazy::new(|| {
         ],
     })
 });
+
+pub static MEI: Lazy<Background> = Lazy::new(|| {
+    Background::Gradient(LinearGradient {
+        start: GradientPoint {
+            x: DimensionValue::Num(0.),
+            y: DimensionValue::Num(0.),
+        },
+        end: GradientPoint {
+            x: DimensionValue::Max,
+            y: DimensionValue::Max,
+        },
+        stops: vec![
+            LinearGradientStop::new(0., "#EBECB2"),
+            LinearGradientStop::new(0.28, "#F3B0F7"),
+            LinearGradientStop::new(0.73, "#92B5F0"),
+            LinearGradientStop::new(0.94, "#AEF0F8"),
+        ],
+    })
+});

@@ -1,5 +1,6 @@
 mod code;
 mod config;
+mod egg;
 mod logger;
 mod watermark;
 mod window;
@@ -12,6 +13,7 @@ use clap::Parser;
 use code::create_code;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
+use egg::say;
 use watermark::create_watermark;
 use window::create_window;
 
@@ -277,5 +279,8 @@ fn with_spinner<T>(cb: impl Fn() -> T) -> T {
 fn main() {
     if let Err(err) = generate_snapshot() {
         logger::error(&err.to_string());
-    }
+        return;
+    };
+
+    say();
 }

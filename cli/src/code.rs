@@ -11,10 +11,18 @@ use codesnap::{
     utils::clipboard::Clipboard,
 };
 
-use crate::{CLI, STDIN_CODE_DEFAULT_CHAR};
+use crate::{
+    range::{cut_code_snippet_by_range, prepare_range},
+    CLI, STDIN_CODE_DEFAULT_CHAR,
+};
 
 pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
-    let code_snippet = get_code_snippet(cli)?;
+    let code_snippet = cut_code_snippet_by_range(
+        &get_code_snippet(cli)?,
+        &cli.range
+            .clone()
+            .and_then(|range| Some(prepare_range(&range))),
+    )?;
     let mut code_builder = CodeBuilder::from_code(config_code.clone());
     let mut code = code_builder.content(&code_snippet).build()?;
 

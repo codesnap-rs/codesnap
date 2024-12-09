@@ -2,6 +2,7 @@ mod code;
 mod config;
 mod egg;
 mod logger;
+mod range;
 mod watermark;
 mod window;
 
@@ -52,6 +53,16 @@ struct CLI {
     /// to the directory.
     #[arg(short, long)]
     output: String,
+
+    /// You can set the range of the code snippet to display
+    /// for example, display the 3rd to 5th:
+    /// 3:5
+    /// The syntax is similar to the range in Python or Golang, so basically you can use 3: to
+    /// represent the 3rd to the end, or use :5 to represent the start to the 5th.
+    /// This option is useful when you use the `from_file` option as the input, and you just want
+    /// to display part of the code snippet.
+    #[arg(long)]
+    range: Option<String>,
 
     /// Font family for the code snippet
     #[arg(long)]

@@ -7,25 +7,25 @@ use std::{
 use anyhow::bail;
 use clap::CommandFactory;
 use codesnap::{
-    config::{Breadcrumbs, Code, CodeBuilder, HighlightLine},
+    config::{Breadcrumbs, Code, CodeBuilder, HighlightLine, LineNumberBuilder},
     utils::clipboard::Clipboard,
 };
 
-use crate::{
-    range::{cut_code_snippet_by_range, prepare_range},
-    CLI, STDIN_CODE_DEFAULT_CHAR,
-};
+use crate::{range::Range, CLI, STDIN_CODE_DEFAULT_CHAR};
 
 pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
-    let code_snippet = cut_code_snippet_by_range(
-        &get_code_snippet(cli)?,
-        &cli.range
-            .clone()
-            .and_then(|range| Some(prepare_range(&range))),
-    )?;
+    let range = Range::from_opt_string(cli.range.clone())?;
+    let code_snippet = range.cut_code_snippet(get_code_snippet(cli)?)?;
     let mut code_builder = CodeBuilder::from_code(config_code.clone());
     let mut code = code_builder.content(&code_snippet).build()?;
 
+    code.line_number = cli.has_line_number.then(|| {
+        LineNumberBuilder::default()
+            .start_number(range.0.parse::<u32>().unwrap_or(1))
+            .color(cli.line_number_color.clone())
+            .build()
+            .unwrap()
+    });
     code.theme = cli.code_theme.clone().unwrap_or(config_code.theme);
     code.font_family = cli
         .code_font_family

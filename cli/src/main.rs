@@ -77,6 +77,9 @@ struct CLI {
     #[arg(long)]
     has_breadcrumbs: bool,
 
+    #[arg(long)]
+    has_line_number: bool,
+
     /// Breadcrumbs separator is the character to separate the path in breadcrumbs
     /// Default is `/`
     #[arg(long)]

@@ -1,5 +1,3 @@
-use std::str::Lines;
-
 use anyhow::bail;
 
 const RANGE_SEPARATOR: &'static str = ":";

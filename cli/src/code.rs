@@ -15,13 +15,15 @@ use crate::{range::Range, CLI, STDIN_CODE_DEFAULT_CHAR};
 
 pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
     let range = Range::from_opt_string(cli.range.clone())?;
-    let code_snippet = range.cut_code_snippet(get_code_snippet(cli)?)?;
+    let code_snippet = get_code_snippet(cli)?;
+    let parsed_range = range.parse_range(&code_snippet)?;
+    let parsed_code_snippet = parsed_range.cut_code_snippet(&code_snippet)?;
     let mut code_builder = CodeBuilder::from_code(config_code.clone());
-    let mut code = code_builder.content(&code_snippet).build()?;
+    let mut code = code_builder.content(&parsed_code_snippet).build()?;
 
     code.line_number = cli.has_line_number.then(|| {
         LineNumberBuilder::default()
-            .start_number(range.0.parse::<u32>().unwrap_or(1))
+            .start_number(parsed_range.0 as u32)
             .color(cli.line_number_color.clone())
             .build()
             .unwrap()
@@ -34,22 +36,38 @@ pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
     code.file_path = cli.from_file.clone().or(config_code.file_path);
     code.language = cli.language.clone().or(config_code.language);
     code.breadcrumbs = create_breadcrumbs(&cli).or(config_code.breadcrumbs);
-    code.highlight_lines = create_highlight_lines(&cli)?;
+    code.highlight_lines = create_highlight_lines(&cli, &code_snippet)?;
 
     Ok(code)
 }
 
-fn create_highlight_lines(cli: &CLI) -> Result<Vec<HighlightLine>, serde_json::Error> {
-    match cli.highlight_lines {
-        Some(ref highlight_lines) => serde_json::from_str::<Vec<HighlightLine>>(highlight_lines),
-        None => Ok(vec![]),
+fn create_highlight_lines(cli: &CLI, code_snippet: &str) -> anyhow::Result<Vec<HighlightLine>> {
+    if let Some(ref raw_highlight_lines) = cli.raw_highlight_lines {
+        let highlight_lines = serde_json::from_str::<Vec<HighlightLine>>(raw_highlight_lines)?;
+
+        return Ok(highlight_lines);
     }
+
+    let highlight_lines = match cli.highlight_range {
+        Some(ref highlight_range) => {
+            let Range(start, end) = Range::from_str(&highlight_range)?.parse_range(code_snippet)?;
+
+            vec![HighlightLine::Range(
+                start as u32,
+                end as u32,
+                cli.highlight_range_color.clone(),
+            )]
+        }
+        None => vec![],
+    };
+
+    Ok(highlight_lines)
 }
 
 fn create_breadcrumbs(cli: &CLI) -> Option<Breadcrumbs> {
     cli.has_breadcrumbs.then(|| Breadcrumbs {
         separator: cli.breadcrumbs_separator.clone(),
-        font_family: cli.breadcrumbs_font_family.clone(),
+        font_family: Some(cli.breadcrumbs_font_family.clone()),
         color: cli
             .breadcrumbs_color
             .clone()

@@ -86,8 +86,8 @@ struct CLI {
     breadcrumbs_separator: Option<String>,
 
     /// Breadcrumbs font family
-    #[arg(long)]
-    breadcrumbs_font_family: Option<String>,
+    #[arg(long, default_value = "CaskaydiaCove Nerd Font")]
+    breadcrumbs_font_family: String,
 
     /// Breadcrumbs font color
     #[arg(long)]
@@ -101,6 +101,15 @@ struct CLI {
     #[arg(long, default_value = "#495162")]
     line_number_color: String,
 
+    /// Convenient version of `--raw-highlight-lines` option, you can set the highlight range
+    /// with a simple syntax, for example, highlight the 3rd to 5th lines:
+    /// 3:5
+    #[arg(long)]
+    highlight_range: Option<String>,
+
+    #[arg(long, default_value = "#ffffff10")]
+    highlight_range_color: String,
+
     /// CodeSnap allows users to highlight multiple lines with custom highlight color in the code snippet
     /// The content of highlight_lines is JSON string, for example highlight the first line and the
     /// 3rd to 5th lines:
@@ -110,7 +119,7 @@ struct CLI {
     /// ]"
     ///
     #[arg(long)]
-    highlight_lines: Option<String>,
+    raw_highlight_lines: Option<String>,
 
     /// Set the language of the code snippet, If you using the `file` option, CodeSnap will
     /// automatically detect the language from the file extension.

@@ -105,7 +105,7 @@ impl HighlightCodeBlock {
         let rect = Rect::from_xywh(
             render_params.x - self.editor_padding.left,
             render_params.y + start_y_offset,
-            parent_style.width + self.editor_padding.horizontal(),
+            parent_style.width,
             // If end_line_number is equal to start_line_number, the height should be line_height
             (end_line_number - start_line_number + 1) as f32 * self.line_height,
         )

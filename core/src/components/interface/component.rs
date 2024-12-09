@@ -86,14 +86,15 @@ pub trait Component {
         RawComponentStyle::default()
     }
 
-    fn parse_size(&self, size: Size, dynamic_value: f32) -> f32 {
+    fn parse_size(&self, size: Size, dynamic_value: f32, inherit_value: Option<f32>) -> f32 {
         match size {
             Size::Num(num) => num,
             Size::Dynamic => dynamic_value,
+            Size::Inherit => inherit_value.unwrap_or(dynamic_value),
         }
     }
 
-    fn parsed_style(&self) -> Style<f32> {
+    fn parsed_style(&self, parent_style: Option<&ComponentStyle>) -> Style<f32> {
         // If render_condition return false, the whole component shouldn't rendered,
         // includes its children
         if !self.render_condition() {
@@ -108,7 +109,7 @@ pub trait Component {
             RawComponentStyle::default()
         };
         let (width, height) = self.get_dynamic_wh();
-        let width = self.parse_size(style.width, width)
+        let width = self.parse_size(style.width, width, parent_style.map(|s| s.width))
             + style.padding.horizontal()
             + style.margin.horizontal();
 
@@ -119,7 +120,7 @@ pub trait Component {
             } else {
                 style.min_width
             },
-            height: self.parse_size(style.height, height)
+            height: self.parse_size(style.height, height, parent_style.map(|s| s.height))
                 + style.padding.vertical()
                 + style.margin.vertical(),
             align: style.align,
@@ -136,7 +137,7 @@ pub trait Component {
         parent_style: ComponentStyle,
         sibling_style: ComponentStyle,
     ) -> render_error::Result<RenderParams> {
-        let style = self.parsed_style();
+        let style = self.parsed_style(Some(&parent_style));
         let render_params = self.initialize(
             &component_render_params.parse_into_render_params_with_style(
                 parent_style.clone(),
@@ -172,7 +173,7 @@ pub trait Component {
                 style.clone(),
                 sibling_style,
             )?;
-            sibling_style = child.parsed_style();
+            sibling_style = child.parsed_style(Some(&style.clone()));
         }
 
         Ok(render_params.clone())
@@ -190,13 +191,13 @@ pub trait Component {
         match style.align {
             // If align is row, width is sum of children width, height is max of children height
             ComponentAlign::Row => calc_children_wh(|(w, h), child| {
-                let style = child.parsed_style();
+                let style = child.parsed_style(None);
 
                 (w + style.width, h.max(style.height))
             }),
             // If align is column, width is max of children width, height is sum of children height
             ComponentAlign::Column => calc_children_wh(|(w, h), child| {
-                let style = child.parsed_style();
+                let style = child.parsed_style(None);
 
                 (w.max(style.width), h + style.height)
             }),

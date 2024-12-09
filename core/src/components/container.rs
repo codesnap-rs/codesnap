@@ -22,7 +22,7 @@ impl Container {
     }
 
     pub fn draw_root(&self, context: &ComponentContext) -> Result<Pixmap> {
-        let style = self.parsed_style();
+        let style = self.parsed_style(None);
         let mut pixmap = Pixmap::new(
             (style.width * context.scale_factor) as u32,
             (style.height * context.scale_factor) as u32,

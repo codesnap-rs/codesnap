@@ -132,7 +132,7 @@ pub struct Breadcrumbs {
     #[builder(setter(into, strip_option), default = None)]
     pub separator: Option<String>,
 
-    #[builder(setter(into, strip_option), default = None)]
+    #[builder(setter(into, strip_option), default = Some(String::from("CaskaydiaCove Nerd Font")))]
     pub font_family: Option<String>,
 
     #[builder(setter(into), default = String::from("#80848b"))]

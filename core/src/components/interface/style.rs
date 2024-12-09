@@ -8,6 +8,7 @@ pub enum ComponentAlign {
 
 pub enum Size {
     Dynamic,
+    Inherit,
     Num(f32),
 }
 

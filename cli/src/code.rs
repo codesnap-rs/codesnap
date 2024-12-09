@@ -11,7 +11,11 @@ use codesnap::{
     utils::clipboard::Clipboard,
 };
 
-use crate::{range::Range, CLI, STDIN_CODE_DEFAULT_CHAR};
+use crate::{
+    highlight::{create_highlight_lines_by_opt_range, create_highlight_lines_by_ranges},
+    range::Range,
+    CLI, STDIN_CODE_DEFAULT_CHAR,
+};
 
 pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
     let range = Range::from_opt_string(cli.range.clone())?;
@@ -48,20 +52,17 @@ fn create_highlight_lines(cli: &CLI, code_snippet: &str) -> anyhow::Result<Vec<H
         return Ok(highlight_lines);
     }
 
-    let highlight_lines = match cli.highlight_range {
-        Some(ref highlight_range) => {
-            let Range(start, end) = Range::from_str(&highlight_range)?.parse_range(code_snippet)?;
+    let highlight_lines = create_highlight_lines_by_opt_range(
+        &cli.highlight_range,
+        &cli.highlight_range_color,
+        code_snippet,
+    )?;
+    let delete_highlight_lines =
+        create_highlight_lines_by_ranges(&cli.delete_line, &cli.delete_line_color, code_snippet)?;
+    let new_highlight_lines =
+        create_highlight_lines_by_ranges(&cli.add_line, &cli.add_line_color, code_snippet)?;
 
-            vec![HighlightLine::Range(
-                start as u32,
-                end as u32,
-                cli.highlight_range_color.clone(),
-            )]
-        }
-        None => vec![],
-    };
-
-    Ok(highlight_lines)
+    Ok([highlight_lines, delete_highlight_lines, new_highlight_lines].concat())
 }
 
 fn create_breadcrumbs(cli: &CLI) -> Option<Breadcrumbs> {

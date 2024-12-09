@@ -1,6 +1,7 @@
 mod code;
 mod config;
 mod egg;
+mod highlight;
 mod logger;
 mod range;
 mod watermark;
@@ -101,12 +102,29 @@ struct CLI {
     #[arg(long, default_value = "#495162")]
     line_number_color: String,
 
+    /// Delete lines will be marked with a red line
+    #[arg(long, short, num_args=0..)]
+    delete_line: Vec<String>,
+
+    /// Delete line color
+    #[arg(long, default_value = "#ff6b6b30")]
+    delete_line_color: String,
+
+    /// New lines will be marked with a green line
+    #[arg(long, short, num_args=0..)]
+    add_line: Vec<String>,
+
+    /// New line color
+    #[arg(long, default_value = "#2ecc7130")]
+    add_line_color: String,
+
     /// Convenient version of `--raw-highlight-lines` option, you can set the highlight range
     /// with a simple syntax, for example, highlight the 3rd to 5th lines:
     /// 3:5
     #[arg(long)]
     highlight_range: Option<String>,
 
+    /// Highlight color for the highlighted code lines
     #[arg(long, default_value = "#ffffff10")]
     highlight_range_color: String,
 

@@ -103,7 +103,7 @@ struct CLI {
     line_number_color: String,
 
     /// Delete lines will be marked with a red line
-    #[arg(long, short, num_args=0..)]
+    #[arg(long, short, num_args=1..)]
     delete_line: Vec<String>,
 
     /// Delete line color
@@ -111,7 +111,7 @@ struct CLI {
     delete_line_color: String,
 
     /// New lines will be marked with a green line
-    #[arg(long, short, num_args=0..)]
+    #[arg(long, short, num_args=1..)]
     add_line: Vec<String>,
 
     /// New line color

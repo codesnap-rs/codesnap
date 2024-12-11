@@ -42,17 +42,36 @@ Generally, you can directly use CLI tool provide by CodeSnap to generate code sn
 CodeSnap provide two ways to use it, you can use it as a CLI tool or as a library in your own project.
 
 ### CLI
-For CLI tool, you can install it via `cargo`:
+For CLI tool, you can install it for different platforms:
 
-**Cargo**
+<details>
+<summary>Arch Linux</summary>
+
+[codesnap](https://aur.archlinux.org/packages/codesnap) is available on [AUR](https://aur.archlinux.org), you can install it using your preferred AUR helper. Example:
+
+```bash
+paru -S codesnap
+```
+
+</details>
+
+<details>
+<summary>Cargo</summary>
+
 ```bash
 cargo install codesnap-cli
 ```
 
-**Homebrew**
+</details>
+
+<details>
+<summary>Homebrew</summary>
+
 ```bash
 brew install mistricky/tap/CodeSnap
 ```
+
+</details>
 
 Use `codesnap` command to generate code snapshot:
 

@@ -21,6 +21,8 @@ jobs:
 
       - name: Check commit message
         uses: wagoid/commitlint-github-action@v4
+        with:
+          configFile: commitlint.config.ts
 
   code-style:
     runs-on: ubuntu-latest

@@ -36,6 +36,7 @@ jobs:
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: codesnap
+          include: LICENSE,README.md
           target: ${{ matrix.target }}
           tar: unix
           zip: windows

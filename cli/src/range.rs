@@ -3,6 +3,7 @@ use anyhow::bail;
 const RANGE_SEPARATOR: &'static str = ":";
 pub const DEFAULT_RANGE: &'static str = "start:end";
 
+#[derive(Debug)]
 pub struct Range<T>(pub T, pub T);
 
 impl Range<String> {

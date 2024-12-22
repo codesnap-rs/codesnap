@@ -47,10 +47,10 @@ For CLI tool, you can install it for different platforms:
 <details>
 <summary>Arch Linux</summary>
 
-[codesnap](https://aur.archlinux.org/packages/codesnap) is available on [AUR](https://aur.archlinux.org), you can install it using your preferred AUR helper. Example:
+CodeSnap is available in the [extra repository](https://archlinux.org/packages/extra/x86_64/codesnap/):
 
 ```bash
-paru -S codesnap
+pacman -S codesnap
 ```
 
 </details>

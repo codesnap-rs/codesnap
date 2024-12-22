@@ -52,7 +52,11 @@ fn create_highlight_lines(
         return Ok(highlight_lines);
     }
 
-    let highlight_range = HighlightLineRange::from(code_snippet_range, code_snippet)?;
+    let highlight_range = HighlightLineRange::from(
+        code_snippet_range,
+        code_snippet,
+        cli.relative_highlight_range,
+    )?;
     let highlight_lines = cli
         .highlight_range
         .clone()

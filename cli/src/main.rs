@@ -124,6 +124,9 @@ struct CLI {
     #[arg(long)]
     highlight_range: Option<String>,
 
+    #[arg(long)]
+    relative_highlight_range: bool,
+
     /// Highlight color for the highlighted code lines
     #[arg(long, default_value = "#ffffff10")]
     highlight_range_color: String,

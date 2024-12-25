@@ -56,6 +56,17 @@ pacman -S codesnap
 </details>
 
 <details>
+<summary>Nix/NixOS</summary>
+
+CodeSnap is available in the [nixpkgs](https://github.com/NixOS/nixpkgs):
+
+```bash
+nix-env -i codesnap
+```
+
+</details>
+
+<details>
 <summary>Cargo</summary>
 
 ```bash

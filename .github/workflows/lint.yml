@@ -32,4 +32,5 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: rustfmt --check
+      - run: rustfmt --check  # -- or --
+      # - run: cargo fmt --all -- --check

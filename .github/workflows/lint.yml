@@ -32,7 +32,4 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --check
+      - run: rustfmt --check

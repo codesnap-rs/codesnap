@@ -1,6 +1,6 @@
 name: Lint
 
-on: push
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -20,7 +20,7 @@ jobs:
         run: npm i commitlint-config-wizardoc -D
 
       - name: Check commit message
-        uses: wagoid/commitlint-github-action@v4
+        uses: wagoid/commitlint-github-action@v6
         with:
           configFile: commitlint.config.ts
 

@@ -9,5 +9,6 @@ updates:
       github-actions:
         patterns:
           - "*"  # Group all Actions updates into a single larger pull request
+    prefix: "[Chore::deps]"
     schedule:
       interval: weekly

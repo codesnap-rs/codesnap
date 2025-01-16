@@ -20,7 +20,7 @@ jobs:
 
       - name: Read version from core project
         id: read_toml
-        uses: SebRollen/toml-action@v1.0.2
+        uses: SebRollen/toml-action@v1.2.0
         with:
           file: core/Cargo.toml
           field: package.version

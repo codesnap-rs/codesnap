@@ -17,10 +17,11 @@ pub fn create_window(cli: &CLI, config_window: Window) -> anyhow::Result<Window>
     Ok(window)
 }
 
-fn create_border(cli: &CLI) -> Option<Border> {
-    cli.has_border.then(|| Border {
+fn create_border(cli: &CLI) -> Border {
+    Border {
         color: cli.border_color.clone(),
-    })
+        width: if cli.has_border { 1. } else { 0. },
+    }
 }
 
 fn create_title(cli: &CLI) -> Option<TitleConfig> {

@@ -185,15 +185,6 @@ pub enum HighlightLine {
     Range(u32, u32, String),
 }
 
-// #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-// pub struct LineNumber {
-//     #[builder(setter(into))]
-//     pub start_number: u32,
-//
-//     #[builder(setter(into), default = String::from("#495162"))]
-//     pub color: String,
-// }
-
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 pub struct CommandLineContent {
     #[builder(setter(into))]
@@ -313,7 +304,7 @@ impl WatermarkBuilder {
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
-#[builder(derive(serde::Deserialize))]
+#[builder(derive(serde::Deserialize, serde::Serialize))]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]
     pub window: Window,
@@ -366,6 +357,9 @@ pub struct SnapshotConfig {
 
     #[builder(setter(into), default = BAMBOO.clone())]
     pub background: Background,
+
+    #[builder(setter(into), default = String::from("#495162"))]
+    pub line_number_color: String,
 }
 
 impl CodeSnap {
@@ -383,24 +377,38 @@ impl CodeSnap {
         serde_json::from_str::<CodeSnap>(config)
     }
 
-    // pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
-    // where
-    //     F: Fn(RawCode) -> anyhow::Result<Code>,
-    // {
-    //     let code = self.code.clone().unwrap_or(Code::Raw(
-    //         RawCodeBuilder::default()
-    //             .content(String::from(""))
-    //             .build()?,
-    //     ));
-    //     let raw_code = match code {
-    //         Code::Raw(raw_code) => raw_code,
-    //         _ => return Ok(self),
-    //     };
-    //
-    //     self.code = Some(f(raw_code)?);
-    //
-    //     Ok(self)
+    // pub fn from_snapshot_config(snapshot_config: SnapshotConfig) -> CodeSnap {
+    //     snapshot_config as CodeSnap;
     // }
+
+    pub fn map_code_config<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
+    where
+        F: Fn(CodeConfig) -> anyhow::Result<CodeConfig>,
+    {
+        self.code_config = Some(f(self
+            .code_config
+            .clone()
+            .unwrap_or(CodeConfigBuilder::default().build()?))?);
+
+        Ok(self)
+    }
+
+    pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
+    where
+        F: Fn(Code) -> anyhow::Result<Content>,
+    {
+        let content = self.content.clone().unwrap_or(Content::Code(
+            CodeBuilder::default().content(String::from("")).build()?,
+        ));
+        let code_content = match content {
+            Content::Code(code_content) => code_content,
+            _ => return Ok(self),
+        };
+
+        self.content = Some(f(code_content)?);
+
+        Ok(self)
+    }
 
     pub fn map_window<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where

@@ -1,9 +1,25 @@
+use serde::{Deserialize, Serialize};
 use std::fs::{self, create_dir_all, read_to_string};
 
 use crate::logger;
 use anyhow::Context;
+use codesnap::config::{CodeSnap, SnapshotConfig};
 
 const DEFAULT_CONFIG_CONTENT: &'static str = include_str!("../config.json");
+
+#[derive(Serialize, Deserialize)]
+pub struct CodeSnapCLIConfig {
+    pub print_eggs: bool,
+    pub snapshot_config: CodeSnap,
+}
+
+impl CodeSnapCLIConfig {
+    pub fn from(content: &str) -> anyhow::Result<Self> {
+        let config: Self = serde_json::from_str(&content)?;
+
+        Ok(config)
+    }
+}
 
 // Get CodeSnap config, create if the config does not exists
 pub fn get_config_content() -> anyhow::Result<String> {

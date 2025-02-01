@@ -1,4 +1,5 @@
 mod code;
+mod code_config;
 mod config;
 mod egg;
 mod highlight;
@@ -13,8 +14,10 @@ use anyhow::bail;
 use clap::value_parser;
 use clap::Parser;
 use code::create_code;
+use code_config::create_code_config;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
+use config::CodeSnapCLIConfig;
 use egg::say;
 use watermark::create_watermark;
 use window::create_window;
@@ -90,8 +93,8 @@ struct CLI {
     breadcrumbs_separator: Option<String>,
 
     /// Breadcrumbs font family
-    #[arg(long, default_value = "CaskaydiaCove Nerd Font")]
-    breadcrumbs_font_family: String,
+    #[arg(long)]
+    breadcrumbs_font_family: Option<String>,
 
     /// Breadcrumbs font color
     #[arg(long)]
@@ -261,9 +264,8 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
     Ok(format!("Snapshot saved to {} successful!", cli.output))
 }
 
-fn generate_snapshot() -> anyhow::Result<()> {
-    let cli = CLI::parse();
-    let snapshot = create_snapshot_config(&cli)?;
+fn generate_snapshot_with_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<()> {
+    let snapshot = create_snapshot_config(&cli, codesnap)?;
     let snapshot_type = cli.r#type.clone();
 
     if snapshot_type == "ascii" && cli.output != "clipboard" {
@@ -278,19 +280,10 @@ fn generate_snapshot() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn create_snapshot_config(cli: &CLI) -> anyhow::Result<SnapshotConfig> {
-    // Create CodeSnap config from config, if the user does not have a config file, we will create
-    // a default CodeSnap config to $HOME/.codesnap/config.json for the user.
-    let mut codesnap_default = if let Some(ref config) = cli.config {
-        let content = read_to_string(config)?;
-
-        CodeSnap::from_config(&content)?
-    } else {
-        CodeSnap::from_config(&config::get_config_content()?)?
-    };
-
+fn create_snapshot_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<SnapshotConfig> {
     // Build screenshot config
-    let mut codesnap = codesnap_default
+    let mut codesnap = codesnap
+        .map_code_config(|code_config| create_code_config(&cli, code_config))?
         .map_code(|raw_code| create_code(&cli, raw_code))?
         .map_watermark(|watermark| create_watermark(&cli, watermark))?
         .map_window(|window| create_window(&cli, window))?
@@ -300,6 +293,7 @@ fn create_snapshot_config(cli: &CLI) -> anyhow::Result<SnapshotConfig> {
     codesnap.themes_folder = cli.themes_folder.clone().or(codesnap.themes_folder);
     codesnap.fonts_folder = cli.fonts_folder.clone().or(codesnap.fonts_folder);
     codesnap.theme = cli.code_theme.clone();
+    codesnap.line_number_color = cli.line_number_color.clone();
 
     Ok(codesnap)
 }
@@ -324,11 +318,31 @@ fn with_spinner<T>(cb: impl Fn() -> T) -> T {
     result
 }
 
+fn generate_snapshot() -> anyhow::Result<()> {
+    let cli = CLI::parse();
+
+    // Create CodeSnap config from config, if the user does not have a config file, we will create
+    // a default CodeSnap config to $HOME/.codesnap/config.json for the user.
+    let codesnap_cli_config = if let Some(ref config) = cli.config {
+        let content = read_to_string(config)?;
+
+        CodeSnapCLIConfig::from(&content)?
+    } else {
+        CodeSnapCLIConfig::from(&config::get_config_content()?)?
+    };
+
+    generate_snapshot_with_config(&cli, codesnap_cli_config.snapshot_config)?;
+
+    if codesnap_cli_config.print_eggs {
+        say();
+    }
+
+    Ok(())
+}
+
 fn main() {
     if let Err(err) = generate_snapshot() {
         logger::error(&err.to_string());
         return;
     };
-
-    say();
 }

@@ -62,6 +62,10 @@ impl Component for MacTitleBar {
 
         Ok(())
     }
+
+    fn name(&self) -> &'static str {
+        "MacTitleBar"
+    }
 }
 
 impl MacTitleBar {

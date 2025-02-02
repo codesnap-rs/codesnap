@@ -1,12 +1,10 @@
 use std::path::MAIN_SEPARATOR_STR;
 
-use cosmic_text::{Attrs, Family};
+use cosmic_text::{Attrs, Family, Metrics};
 use regex::Regex;
 
 use crate::{
-    config,
     edges::margin::Margin,
-    utils::text::{create_file_system_by_fonts_folder, FontRenderer},
     utils::{code::calc_wh_with_min_width, color::RgbaColor},
 };
 
@@ -24,6 +22,10 @@ pub struct Breadcrumbs {
 }
 
 impl Component for Breadcrumbs {
+    fn name(&self) -> &'static str {
+        "Breadcrumbs"
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }
@@ -59,7 +61,7 @@ impl Component for Breadcrumbs {
         pixmap: &mut tiny_skia::Pixmap,
         context: &super::interface::component::ComponentContext,
         render_params: &super::interface::component::RenderParams,
-        style: &super::interface::style::ComponentStyle,
+        _style: &super::interface::style::ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> super::interface::render_error::Result<()> {
         let config = context.take_snapshot_params.code_config.breadcrumbs.clone();
@@ -79,17 +81,10 @@ impl Component for Breadcrumbs {
                 &context.take_snapshot_params.code_config.font_family,
             ));
 
-            FontRenderer::new(
-                12.,
-                LINE_HEIGHT,
-                context.scale_factor,
-                create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
-            )
-            .draw_text(
+            context.font_renderer.lock().unwrap().draw_text(
                 render_params.x,
                 render_params.y,
-                style.width,
-                LINE_HEIGHT,
+                Metrics::new(12., LINE_HEIGHT),
                 vec![(&path, attrs)],
                 pixmap,
             );

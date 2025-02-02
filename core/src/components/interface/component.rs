@@ -2,14 +2,30 @@ use super::{
     render_error,
     style::{ComponentAlign, ComponentStyle, RawComponentStyle, Size, Style},
 };
-use crate::{config::SnapshotConfig, edges::edge::Edge, utils::theme_provider::ThemeProvider};
-use std::sync::Arc;
+use crate::{
+    config::SnapshotConfig,
+    edges::edge::Edge,
+    utils::{text::FontRenderer, theme_provider::ThemeProvider},
+};
+use lazy_static::lazy_static;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 use tiny_skia::Pixmap;
+
+lazy_static! {
+    // The style parse process is recursive, there may some components style to be reculculated
+    // many times, so we cache the style to avoid reculculate
+    // The key is the component name, which defined in the Component trait
+    static ref STYLE_MAP: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
+}
 
 pub struct ComponentContext {
     pub scale_factor: f32,
     pub take_snapshot_params: Arc<SnapshotConfig>,
     pub theme_provider: ThemeProvider,
+    pub font_renderer: Mutex<FontRenderer>,
 }
 
 #[derive(Default, Clone)]
@@ -78,6 +94,14 @@ pub trait Component {
         Ok(())
     }
 
+    fn name(&self) -> &'static str {
+        // Stub component means this component no need to cache its style
+        // For instance, "Row" and "Col" component, they are just layout components
+        // and their style is determined by their children, so they don't need to cache
+        // their style
+        "STUB_COMPONENT"
+    }
+
     fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         RawComponentStyle::default()
     }
@@ -95,6 +119,14 @@ pub trait Component {
         parent_style: Option<&ComponentStyle>,
         context: &ComponentContext,
     ) -> Style<f32> {
+        let name = self.name();
+
+        if let Some(style) = STYLE_MAP.lock().unwrap().get(name) {
+            if name != "STUB_COMPONENT" {
+                return style.clone();
+            }
+        }
+
         // If render_condition return false, the whole component shouldn't rendered,
         // includes its children
         if !self.render_condition(context) {
@@ -108,12 +140,11 @@ pub trait Component {
         } else {
             RawComponentStyle::default()
         };
-        let (width, height) = self.get_dynamic_wh(context);
+        let (width, height) = self.get_dynamic_wh(style.clone(), context);
         let width = self.parse_size(style.width, width, parent_style.map(|s| s.width))
             + style.padding.horizontal()
             + style.margin.horizontal();
-
-        Style {
+        let style = Style {
             min_width: style.min_width,
             width: if width > style.min_width {
                 width
@@ -126,7 +157,10 @@ pub trait Component {
             align: style.align,
             padding: style.padding,
             margin: style.margin,
-        }
+        };
+
+        STYLE_MAP.lock().unwrap().insert(self.name(), style.clone());
+        style
     }
 
     fn draw(
@@ -181,7 +215,7 @@ pub trait Component {
 
     // Dynamic calculate width and height of children, if the children is empty, get_dynamic_wh
     // will return (0., 0.)
-    fn get_dynamic_wh(&self, context: &ComponentContext) -> (f32, f32) {
+    fn get_dynamic_wh(&self, style: RawComponentStyle, context: &ComponentContext) -> (f32, f32) {
         let children = self.children();
 
         fn calc_row(
@@ -202,7 +236,6 @@ pub trait Component {
             (acc.0.max(style.width), acc.1 + style.height)
         }
 
-        let style = self.style(&context);
         match style.align {
             ComponentAlign::Row => children
                 .iter()

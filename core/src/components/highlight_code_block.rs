@@ -1,8 +1,11 @@
 use crate::{config::HighlightLine, edges::padding::Padding, utils::color::RgbaColor};
 
-use super::interface::{
-    component::{Component, ComponentContext, RenderParams},
-    style::ComponentStyle,
+use super::{
+    editor::code::CODE_LINE_HEIGHT,
+    interface::{
+        component::{Component, ComponentContext, RenderParams},
+        style::ComponentStyle,
+    },
 };
 use tiny_skia::{Paint, Rect, Transform};
 
@@ -10,12 +13,15 @@ use tiny_skia::{Paint, Rect, Transform};
 pub struct HighlightCodeBlock {
     children: Vec<Box<dyn Component>>,
     highlight_lines: Vec<HighlightLine>,
-    line_height: f32,
     editor_padding: Padding,
     code_line_count: usize,
 }
 
 impl Component for HighlightCodeBlock {
+    fn name(&self) -> &'static str {
+        "HighlightCodeBlock"
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }
@@ -63,14 +69,12 @@ impl HighlightCodeBlock {
     pub fn from(
         highlight_lines: Vec<HighlightLine>,
         code_line_count: usize,
-        line_height: f32,
         editor_padding: Padding,
     ) -> HighlightCodeBlock {
         HighlightCodeBlock {
             children: vec![],
             code_line_count,
             highlight_lines,
-            line_height,
             editor_padding,
         }
     }
@@ -97,13 +101,13 @@ impl HighlightCodeBlock {
         let end_line_number = end_line_number.min(self.code_line_count as u32);
         let mut paint = Paint::default();
         // If the start line number is start at n, the y offset should be (n - 1) * line_height
-        let start_y_offset = (start_line_number - 1) as f32 * self.line_height;
+        let start_y_offset = (start_line_number - 1) as f32 * CODE_LINE_HEIGHT;
         let rect = Rect::from_xywh(
             render_params.x - self.editor_padding.left,
             render_params.y + start_y_offset,
             parent_style.width,
             // If end_line_number is equal to start_line_number, the height should be line_height
-            (end_line_number - start_line_number + 1) as f32 * self.line_height,
+            (end_line_number - start_line_number + 1) as f32 * CODE_LINE_HEIGHT,
         )
         .unwrap();
         let color: RgbaColor = hex.into();

@@ -1,4 +1,4 @@
-use cosmic_text::{Attrs, Family, Weight};
+use cosmic_text::{Attrs, Family, Metrics, Weight};
 
 use crate::{
     components::interface::{
@@ -7,20 +7,16 @@ use crate::{
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
     utils::{
-        code::calc_wh_with_min_width,
+        code::{calc_wh_with_min_width, CHAR_WIDTH},
         color::parse_hex_to_cosmic_color,
-        text::{create_file_system_from_binary, FontRenderer},
     },
 };
 
 pub struct CommandLineHeader {
     children: Vec<Box<dyn Component>>,
     full_command: String,
+    metrics: Metrics,
 }
-
-const CASKAYDIA_COVE_NERD_FONT: &[u8] =
-    include_bytes!("../../../assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf");
-const FONT_SIZE: f32 = 12.5;
 
 impl Component for CommandLineHeader {
     fn children(&self) -> &Vec<Box<dyn Component>> {
@@ -32,7 +28,7 @@ impl Component for CommandLineHeader {
             "{} {}",
             context.take_snapshot_params.command_output_config.prompt, self.full_command
         );
-        let (w, h) = calc_wh_with_min_width(parsed_line.as_str(), FONT_SIZE / 2., 20.);
+        let (w, h) = calc_wh_with_min_width(parsed_line.as_str(), CHAR_WIDTH, 20.);
 
         Style::default().size(Size::Num(w), Size::Num(h))
     }
@@ -42,47 +38,43 @@ impl Component for CommandLineHeader {
         pixmap: &mut tiny_skia::Pixmap,
         context: &ComponentContext,
         render_params: &RenderParams,
-        style: &ComponentStyle,
+        _style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
-        // let foreground_color = context.theme_provider.theme.settings.foreground.unwrap();
-        let attr = Attrs::new().family(Family::Name("Caskaydia Cove Nerd Font"));
         let command_config = context.take_snapshot_params.command_output_config.clone();
+        let command_and_args = self.full_command.split_whitespace().collect::<Vec<&str>>();
+        let command_str = command_and_args[0];
+        let create_attrs = || {
+            Attrs::new().family(Family::Name(
+                context
+                    .take_snapshot_params
+                    .code_config
+                    .font_family
+                    .as_str(),
+            ))
+        };
+        let with_space = |str: &str| format!("{} ", str);
+        let prompt = with_space(&context.take_snapshot_params.command_output_config.prompt);
+        let command_str = with_space(command_str);
+        let args = command_and_args[1..].join(" ");
         let spans = vec![
             (
-                command_config.prompt.as_str(),
-                attr.color(parse_hex_to_cosmic_color(&command_config.prompt_color)),
+                prompt.as_str(),
+                create_attrs().color(parse_hex_to_cosmic_color(&command_config.prompt_color)),
             ),
             (
-                self.full_command.as_str(),
-                attr.color(parse_hex_to_cosmic_color(&command_config.command_color))
-                    .weight(Weight::BOLD),
+                command_str.as_str(),
+                create_attrs()
+                    .weight(Weight::BOLD)
+                    .color(parse_hex_to_cosmic_color(&command_config.command_color)),
             ),
-            // (
-            //     self.args.as_str(),
-            //     attr.color(Color::rgba(
-            //         foreground_color.r,
-            //         foreground_color.g,
-            //         foreground_color.b,
-            //         foreground_color.a,
-            //     )),
-            // ),
+            (args.as_str(), create_attrs()),
         ];
 
-        FontRenderer::new(
-            FONT_SIZE,
-            20.,
-            context.scale_factor,
-            create_file_system_from_binary(
-                CASKAYDIA_COVE_NERD_FONT,
-                &context.take_snapshot_params.fonts_folder,
-            ),
-        )
-        .draw_text(
+        context.font_renderer.lock().unwrap().draw_text(
             render_params.x,
             render_params.y,
-            style.width,
-            style.height,
+            self.metrics,
             spans,
             pixmap,
         );
@@ -96,6 +88,7 @@ impl CommandLineHeader {
         CommandLineHeader {
             full_command: full_command.to_string(),
             children: vec![],
+            metrics: Metrics::new(12.5, 20.),
         }
     }
 }

@@ -367,6 +367,7 @@ dependencies = [
  "chrono",
  "cosmic-text",
  "derive_builder",
+ "lazy_static",
  "once_cell",
  "regex",
  "rgb",

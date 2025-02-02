@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::{
     components::{
@@ -9,7 +9,7 @@ use crate::{
         layout::{column::Column, row::Row},
     },
     config::{self, CommandLineContent, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
-    utils::{color::RgbaColor, theme_provider::ThemeProvider},
+    utils::{color::RgbaColor, text::FontRenderer, theme_provider::ThemeProvider},
 };
 use tiny_skia::{Color, Pixmap};
 
@@ -32,7 +32,6 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use super::snapshot_data::SnapshotData;
 
-const LINE_HEIGHT: f32 = 18.;
 const DEFAULT_WINDOW_MIN_WIDTH: f32 = 350.;
 
 pub struct ImageSnapshot {
@@ -93,10 +92,15 @@ impl ImageSnapshot {
     ) -> Box<dyn Fn(Vec<Box<dyn Component>>) -> anyhow::Result<Pixmap>> {
         Box::new(move |render_content| {
             let editor_background_color = theme_provider.theme_background();
+            let font_renderer = Mutex::new(FontRenderer::new(
+                config.scale_factor as f32,
+                config.fonts_folder.clone().unwrap_or_default().as_str(),
+            ));
             let context = ComponentContext {
                 scale_factor: config.scale_factor as f32,
                 take_snapshot_params: Arc::new(config.clone()),
                 theme_provider: theme_provider.clone(),
+                font_renderer,
             };
             let background_padding = Padding::from(config.window.margin.clone());
             let border_rgba_color: RgbaColor = config.window.border.color.as_str().into();
@@ -150,10 +154,9 @@ impl ImageSnapshot {
     pub fn draw_code_content(
         window_padding: &Padding,
         code_content: config::Code,
-    ) -> Vec<Box<dyn Component>> {
+    ) -> anyhow::Result<Vec<Box<dyn Component>>> {
         let code_lines = code_content.content.lines().collect::<Vec<&str>>();
-
-        vec![
+        let view: Vec<Box<dyn Component>> = vec![
             Box::new(Breadcrumbs::from(
                 code_content.has_breadcrumbs,
                 code_content.file_path.clone(),
@@ -162,13 +165,14 @@ impl ImageSnapshot {
                 Box::new(HighlightCodeBlock::from(
                     code_content.highlight_lines.clone(),
                     code_lines.len(),
-                    LINE_HEIGHT,
                     window_padding.clone(),
                 )),
-                Box::new(LineNumber::new(code_content.clone(), LINE_HEIGHT)),
-                Box::new(Code::new(code_content.clone(), LINE_HEIGHT)),
+                Box::new(LineNumber::new(code_content.clone())),
+                Box::new(Code::new(code_content.clone())?),
             ])),
-        ]
+        ];
+
+        Ok(view)
     }
 
     pub fn command_line_content(
@@ -197,11 +201,14 @@ impl ImageSnapshot {
             ..Padding::from_value(14.)
         };
 
-        let drawer =
-            Self::create_drawer_with_frame(config.clone(), theme_provider, window_padding.clone());
+        let drawer = Self::create_drawer_with_frame(
+            config.clone(),
+            theme_provider.clone(),
+            window_padding.clone(),
+        );
         let pixmap = match config.content {
             crate::config::Content::Code(code) => {
-                drawer(Self::draw_code_content(&window_padding, code))
+                drawer(Self::draw_code_content(&window_padding, code)?)
             }
             crate::config::Content::CommandOutput(command_line_content) => {
                 drawer(Self::command_line_content(command_line_content))

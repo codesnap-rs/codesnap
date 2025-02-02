@@ -231,6 +231,9 @@ pub struct CommandOutputConfig {
 
     #[builder(setter(into), default = String::from("#98C379"))]
     pub command_color: String,
+
+    #[builder(setter(into), default = String::from("#ff0000"))]
+    pub string_arg_color: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -259,20 +262,6 @@ pub struct CodeConfig {
     #[serde(default)]
     pub breadcrumbs: Breadcrumbs,
 }
-
-// impl RawCodeBuilder {
-//     pub fn from_code(code: RawCode) -> RawCodeBuilder {
-//         RawCodeBuilder {
-//             content: Some(code.content),
-//             font_family: Some(code.font_family),
-//             breadcrumbs: Some(code.breadcrumbs),
-//             line_number: Some(code.line_number),
-//             highlight_lines: Some(code.highlight_lines),
-//             language: Some(code.language),
-//             file_path: Some(code.file_path),
-//         }
-//     }
-// }
 
 /// Draw a watermark below the code, you can use this to add a logo or any other text
 /// The watermark is designed as a place for users to provide personalize label

@@ -36,7 +36,7 @@ impl Highlight {
                     .unwrap()
                     .into_iter()
                     .map(|(style, str)| {
-                        let syntect::highlighting::Color { r, g, b, a: _ } = style.foreground;
+                        let syntect::highlighting::Color { r, g, b, a } = style.foreground;
                         let attrs = match style.font_style {
                             FontStyle::BOLD => attrs.weight(Weight::BOLD),
                             FontStyle::ITALIC => attrs.style(Style::Italic),
@@ -44,7 +44,7 @@ impl Highlight {
                             _ => attrs,
                         };
 
-                        (str, attrs.color(cosmic_text::Color::rgb(r, g, b)))
+                        (str, attrs.color(cosmic_text::Color::rgba(r, g, b, a)))
                     })
                     .collect::<HighlightResult>()
             })

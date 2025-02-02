@@ -1,4 +1,8 @@
-use syntect::easy::HighlightLines;
+use cosmic_text::Metrics;
+use syntect::{
+    easy::HighlightLines,
+    parsing::{SyntaxReference, SyntaxSet},
+};
 
 use crate::{
     components::interface::{
@@ -6,24 +10,23 @@ use crate::{
         render_error,
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
-    config::{self, CodeConfig},
+    config::{self},
     utils::{
         code::{calc_wh_with_min_width, prepare_code, CHAR_WIDTH},
         highlight::Highlight,
         syntax_provider::SyntaxProvider,
-        text::{create_file_system_from_binary, FontRenderer},
     },
 };
 
-const CASKAYDIA_COVE_NERD_FONT: &[u8] =
-    include_bytes!("../../../assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf");
 const FONT_SIZE: f32 = 12.5;
+pub(crate) const CODE_LINE_HEIGHT: f32 = 18.;
 
 pub struct Code {
     children: Vec<Box<dyn Component>>,
     value: String,
-    code_content: config::Code,
-    line_height: f32,
+    metrics: Metrics,
+    syntax: SyntaxReference,
+    syntax_set: SyntaxSet,
 }
 
 impl Component for Code {
@@ -32,7 +35,7 @@ impl Component for Code {
     }
 
     fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
-        let (w, h) = calc_wh_with_min_width(&self.value, CHAR_WIDTH, self.line_height);
+        let (w, h) = calc_wh_with_min_width(&self.value, CHAR_WIDTH, self.metrics.line_height);
 
         Style::default().size(Size::Num(w), Size::Num(h))
     }
@@ -42,54 +45,52 @@ impl Component for Code {
         pixmap: &mut tiny_skia::Pixmap,
         context: &ComponentContext,
         render_params: &RenderParams,
-        style: &ComponentStyle,
+        _style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
         let highlight = Highlight::new(
             self.value.clone(),
             context.take_snapshot_params.code_config.font_family.clone(),
         );
-        let syntax_provider = SyntaxProvider::new();
-        let syntax = syntax_provider.guess_syntax(
-            self.code_content.language.clone(),
-            self.code_content.file_path.clone(),
-            &self.value,
-        )?;
         let (mut highlight_lines, syntax_set) = (
-            HighlightLines::new(&syntax, &context.theme_provider.theme),
-            &syntax_provider.syntax_set,
+            HighlightLines::new(&self.syntax, &context.theme_provider.theme),
+            &self.syntax_set,
         );
         let highlight_result = highlight.parse(&mut highlight_lines, syntax_set)?;
 
-        FontRenderer::new(
-            FONT_SIZE,
-            self.line_height,
-            context.scale_factor,
-            create_file_system_from_binary(
-                CASKAYDIA_COVE_NERD_FONT,
-                &context.take_snapshot_params.fonts_folder,
-            ),
-        )
-        .draw_text(
+        context.font_renderer.lock().unwrap().draw_text(
             render_params.x,
             render_params.y,
-            style.width,
-            style.height,
+            self.metrics,
             highlight_result.clone(),
             pixmap,
         );
 
         Ok(())
     }
+
+    fn name(&self) -> &'static str {
+        "Code"
+    }
 }
 
 impl Code {
-    pub fn new(code_content: config::Code, line_height: f32) -> Code {
-        Code {
+    pub fn new(code_content: config::Code) -> anyhow::Result<Self> {
+        let value = prepare_code(&code_content.content);
+        let metrics = Metrics::new(FONT_SIZE, CODE_LINE_HEIGHT);
+        let syntax_provider = SyntaxProvider::new();
+        let syntax = syntax_provider.guess_syntax(
+            code_content.language.clone(),
+            code_content.file_path.clone(),
+            &value,
+        )?;
+
+        Ok(Code {
             value: prepare_code(&code_content.content),
-            code_content,
             children: vec![],
-            line_height,
-        }
+            metrics,
+            syntax,
+            syntax_set: syntax_provider.syntax_set,
+        })
     }
 }

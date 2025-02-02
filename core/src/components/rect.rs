@@ -27,9 +27,14 @@ pub struct Rect {
     color: Color,
     children: Vec<Box<dyn Component>>,
     shadow: Option<ShadowConfig>,
+    component_name: &'static str,
 }
 
 impl Component for Rect {
+    fn name(&self) -> &'static str {
+        self.component_name
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }
@@ -115,6 +120,7 @@ impl Rect {
         color: Color,
         min_width: Option<f32>,
         padding: Padding,
+        component_name: &'static str,
         children: Vec<Box<dyn Component>>,
     ) -> Rect {
         Rect {
@@ -123,6 +129,7 @@ impl Rect {
             children,
             padding,
             min_width: min_width.unwrap_or(0.),
+            component_name,
             shadow: None,
         }
     }
@@ -215,16 +222,19 @@ impl Rect {
             color,
             Some(min_width + border_width * 2.),
             Padding::from_value(border_width),
+            "RectUnderLayer",
             vec![Box::new(Rect::new(
                 radius - border_width,
                 border_color,
                 Some(min_width + border_width),
                 Padding::from_value(border_width),
+                "RectBorderLayer",
                 vec![Box::new(Rect::new(
                     radius - border_width * 2.,
                     color,
                     Some(min_width),
                     padding,
+                    "RectInnerLayer",
                     children,
                 ))],
             ))],

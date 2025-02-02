@@ -27,6 +27,10 @@ impl Background {
 }
 
 impl Component for Background {
+    fn name(&self) -> &'static str {
+        "Background"
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }

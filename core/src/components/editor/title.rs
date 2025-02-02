@@ -1,4 +1,4 @@
-use cosmic_text::{Align, Attrs, Family, Weight};
+use cosmic_text::{Align, Attrs, Family, Metrics, Weight};
 
 use crate::{
     components::interface::{
@@ -8,10 +8,7 @@ use crate::{
     },
     config::TitleConfig,
     edges::margin::Margin,
-    utils::{
-        color::parse_hex_to_cosmic_color,
-        text::{create_file_system_by_fonts_folder, FontRenderer},
-    },
+    utils::color::parse_hex_to_cosmic_color,
 };
 
 pub struct Title {
@@ -20,6 +17,10 @@ pub struct Title {
 }
 
 impl Component for Title {
+    fn name(&self) -> &'static str {
+        "Title"
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }
@@ -53,17 +54,18 @@ impl Component for Title {
             .color(parse_hex_to_cosmic_color(&config.color))
             .family(Family::Name(&config.font_family));
 
-        FontRenderer::new(
-            10.,
-            10.,
-            context.scale_factor,
-            create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
-        )
-        .draw_line(
+        // FontRenderer::new(
+        //     10.,
+        //     10.,
+        //     context.scale_factor,
+        //     create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
+        // )
+        context.font_renderer.lock().unwrap().draw_line(
             0.,
             render_params.y,
-            pixmap.width() as f32,
-            pixmap.height() as f32,
+            Metrics::new(10., 10.),
+            // pixmap.width() as f32,
+            // pixmap.height() as f32,
             &config.title,
             attrs,
             Some(Align::Center),

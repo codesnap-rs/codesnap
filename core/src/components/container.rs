@@ -11,6 +11,10 @@ pub struct Container {
 }
 
 impl Component for Container {
+    fn name(&self) -> &'static str {
+        "Container"
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }

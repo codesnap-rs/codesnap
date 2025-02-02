@@ -1,3 +1,5 @@
+use cosmic_text::Metrics;
+
 use crate::{
     ansi::ANSI,
     components::interface::{
@@ -5,19 +7,13 @@ use crate::{
         render_error,
         style::{self, RawComponentStyle, Size, Style},
     },
-    utils::{
-        code::calc_wh_with_min_width,
-        text::{create_file_system_from_binary, FontRenderer},
-    },
+    utils::code::calc_wh_with_min_width,
 };
-
-const CASKAYDIA_COVE_NERD_FONT: &[u8] =
-    include_bytes!("../../../assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf");
-const FONT_SIZE: f32 = 12.5;
 
 pub struct CommandLineOutput {
     ansi_text: String,
     children: Vec<Box<dyn Component>>,
+    metrics: Metrics,
 }
 
 impl Component for CommandLineOutput {
@@ -26,7 +22,11 @@ impl Component for CommandLineOutput {
     }
 
     fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
-        let (w, h) = calc_wh_with_min_width(&self.ansi_text, FONT_SIZE / 2., 20.);
+        let (w, h) = calc_wh_with_min_width(
+            &self.ansi_text,
+            self.metrics.font_size / 2.,
+            self.metrics.line_height,
+        );
 
         Style::default().size(Size::Num(w), Size::Num(h))
     }
@@ -36,31 +36,28 @@ impl Component for CommandLineOutput {
         pixmap: &mut tiny_skia::Pixmap,
         context: &component::ComponentContext,
         render_params: &component::RenderParams,
-        style: &style::ComponentStyle,
+        _style: &style::ComponentStyle,
         _parent_style: &style::ComponentStyle,
     ) -> render_error::Result<()> {
-        let ansi = ANSI::from(&self.ansi_text);
+        let ansi = ANSI::from(
+            &self.ansi_text,
+            context.take_snapshot_params.code_config.font_family.clone(),
+        );
         let spans = ansi.colorize();
 
-        FontRenderer::new(
-            FONT_SIZE,
-            20.,
-            context.scale_factor,
-            create_file_system_from_binary(
-                CASKAYDIA_COVE_NERD_FONT,
-                &context.take_snapshot_params.fonts_folder,
-            ),
-        )
-        .draw_text(
+        context.font_renderer.lock().unwrap().draw_text(
             render_params.x,
             render_params.y,
-            style.width,
-            style.height,
+            self.metrics,
             spans.clone(),
             pixmap,
         );
 
         Ok(())
+    }
+
+    fn name(&self) -> &'static str {
+        "CommandLineOutput"
     }
 }
 
@@ -69,6 +66,7 @@ impl CommandLineOutput {
         CommandLineOutput {
             ansi_text: ansi_text.to_string(),
             children: vec![],
+            metrics: Metrics::new(12.5, 20.),
         }
     }
 }

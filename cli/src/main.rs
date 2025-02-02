@@ -264,7 +264,7 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
     Ok(format!("Snapshot saved to {} successful!", cli.output))
 }
 
-fn generate_snapshot_with_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<()> {
+fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Result<()> {
     let snapshot = create_snapshot_config(&cli, codesnap)?;
     let snapshot_type = cli.r#type.clone();
 

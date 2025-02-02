@@ -3,7 +3,7 @@ use std::fs::{self, create_dir_all, read_to_string};
 
 use crate::logger;
 use anyhow::Context;
-use codesnap::config::{CodeSnap, SnapshotConfig};
+use codesnap::config::CodeSnap;
 
 const DEFAULT_CONFIG_CONTENT: &'static str = include_str!("../config.json");
 

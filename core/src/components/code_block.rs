@@ -8,6 +8,10 @@ pub struct CodeBlock {
 }
 
 impl Component for CodeBlock {
+    fn name(&self) -> &'static str {
+        "CodeBlock"
+    }
+
     fn children(&self) -> &Vec<Box<dyn Component>> {
         &self.children
     }

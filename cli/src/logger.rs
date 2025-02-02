@@ -2,14 +2,11 @@ use std::process;
 
 use ansi_term::{Colour, Style};
 
-fn pretty_print(bg: Colour, level: &str, content: &str) {
+fn pretty_print(color: Colour, level: &str, content: &str) {
     println!(
         "{} {}",
-        Style::new()
-            .on(bg)
-            .fg(Colour::RGB(255, 255, 255))
-            .paint(format!(" {} ", level)),
-        Style::new().fg(bg).paint(format!(" {}", content))
+        Style::new().fg(color).paint(format!("[{}]", level)),
+        content
     );
 }
 

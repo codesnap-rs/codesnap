@@ -1,30 +1,27 @@
-use super::interface::{
-    component::{Component, ComponentContext, RenderParams},
-    render_error,
-    style::{ComponentStyle, RawComponentStyle, Size, Style},
-};
-use crate::{
-    config::Code,
-    edges::margin::Margin,
-    utils::{
-        code::CHAR_WIDTH,
-        text::{create_file_system_by_fonts_folder, FontRenderer},
+use super::{
+    editor::code::CODE_LINE_HEIGHT,
+    interface::{
+        component::{Component, ComponentContext, RenderParams},
+        render_error,
+        style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
 };
-use cosmic_text::{Attrs, Color, Family};
-
-const FONT_SIZE: f32 = 14.;
+use crate::{config::Code, edges::margin::Margin, utils::code::CHAR_WIDTH};
+use cosmic_text::{Attrs, Color, Family, Metrics};
 
 #[derive(Default)]
 pub struct LineNumber {
     children: Vec<Box<dyn Component>>,
-    line_height: f32,
     render_condition: bool,
     line_number_content: Vec<String>,
     number_of_digit: usize,
 }
 
 impl Component for LineNumber {
+    fn name(&self) -> &'static str {
+        "LineNumber"
+    }
+
     fn render_condition(&self, _context: &ComponentContext) -> bool {
         return self.render_condition;
     }
@@ -37,7 +34,7 @@ impl Component for LineNumber {
         Style::default()
             .size(
                 Size::Num(CHAR_WIDTH * self.number_of_digit as f32),
-                Size::Num(self.line_number_content.len() as f32 * self.line_height),
+                Size::Num(self.line_number_content.len() as f32 * CODE_LINE_HEIGHT),
             )
             .margin(Margin {
                 right: 10.,
@@ -50,20 +47,13 @@ impl Component for LineNumber {
         pixmap: &mut tiny_skia::Pixmap,
         context: &ComponentContext,
         render_params: &RenderParams,
-        style: &ComponentStyle,
+        _style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
-        FontRenderer::new(
-            FONT_SIZE,
-            self.line_height,
-            context.scale_factor,
-            create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
-        )
-        .draw_text(
+        context.font_renderer.lock().unwrap().draw_text(
             render_params.x,
             render_params.y,
-            style.width,
-            style.height,
+            Metrics::new(14., CODE_LINE_HEIGHT),
             vec![(
                 &self.line_number_content.join("\n"),
                 Attrs::new()
@@ -80,7 +70,7 @@ impl Component for LineNumber {
 }
 
 impl LineNumber {
-    pub fn new(code_content: Code, line_height: f32) -> LineNumber {
+    pub fn new(code_content: Code) -> LineNumber {
         match code_content.start_line_number {
             None => LineNumber::default(),
             Some(ref start_line_number) => {
@@ -101,7 +91,6 @@ impl LineNumber {
                     number_of_digit,
                     children: vec![],
                     render_condition: true,
-                    line_height,
                 }
             }
         }

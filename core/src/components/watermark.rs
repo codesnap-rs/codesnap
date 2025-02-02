@@ -1,14 +1,7 @@
-use cosmic_text::{Align, Attrs, Family};
+use cosmic_text::{Align, Attrs, Family, Metrics};
 use tiny_skia::Pixmap;
 
-use crate::{
-    config,
-    edges::margin::Margin,
-    utils::{
-        color::parse_hex_to_cosmic_color,
-        text::{create_file_system_from_binary, FontRenderer},
-    },
-};
+use crate::{config, edges::margin::Margin, utils::color::parse_hex_to_cosmic_color};
 
 use super::interface::{
     component::{Component, ComponentContext, RenderParams},
@@ -21,9 +14,11 @@ pub struct Watermark {
     config: Option<config::Watermark>,
 }
 
-const PACIFICO_FONT: &[u8] = include_bytes!("../../assets/fonts/Pacifico-Regular.ttf");
-
 impl Component for Watermark {
+    fn name(&self) -> &'static str {
+        "Watermark"
+    }
+
     fn draw_self(
         &self,
         pixmap: &mut Pixmap,
@@ -37,20 +32,10 @@ impl Component for Watermark {
             .color(parse_hex_to_cosmic_color(&config.color))
             .family(Family::Name(&config.font_family));
 
-        FontRenderer::new(
-            20.,
-            20.,
-            context.scale_factor,
-            create_file_system_from_binary(
-                PACIFICO_FONT,
-                &context.take_snapshot_params.fonts_folder,
-            ),
-        )
-        .draw_line(
+        context.font_renderer.lock().unwrap().draw_line(
             0.,
             render_params.y,
-            pixmap.width() as f32,
-            pixmap.height() as f32,
+            Metrics::new(20., 20.),
             &config.content,
             attrs,
             Some(Align::Center),

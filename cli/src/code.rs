@@ -15,7 +15,7 @@ use codesnap::{
 
 use crate::{highlight::HighlightLineRange, range::Range, CLI, STDIN_CODE_DEFAULT_CHAR};
 
-pub fn create_code(cli: &CLI, code: Code) -> anyhow::Result<Content> {
+pub fn create_code(cli: &CLI, code_config: Code) -> anyhow::Result<Content> {
     let code = match cli.execute[..] {
         [] => {
             let range = Range::from_opt_string(cli.range.clone())?;
@@ -27,8 +27,8 @@ pub fn create_code(cli: &CLI, code: Code) -> anyhow::Result<Content> {
                 .start_line_number(parsed_range.0 as u32)
                 .build()?;
 
-            code.file_path = cli.from_file.clone().or(code.file_path);
-            code.language = cli.language.clone().or(code.language);
+            code.file_path = cli.from_file.clone().or(code_config.file_path);
+            code.language = cli.language.clone().or(code_config.language);
             code.highlight_lines = create_highlight_lines(&cli, parsed_range, &code_snippet)?;
 
             Content::Code(code)

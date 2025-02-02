@@ -5,12 +5,14 @@ use crate::utils::color::parse_hex_to_cosmic_color;
 
 pub struct ANSI {
     raw_text: String,
+    font_family: String,
 }
 
 impl ANSI {
-    pub fn from(text: &str) -> Self {
+    pub fn from(text: &str, font_family: String) -> Self {
         Self {
             raw_text: text.to_string(),
+            font_family,
         }
     }
 
@@ -25,7 +27,7 @@ impl ANSI {
                     category.text,
                     Attrs::new()
                         .color(parse_hex_to_cosmic_color(hex_color))
-                        .family(Family::Name("Caskaydia Cove Nerd Font")),
+                        .family(Family::Name(self.font_family.as_str())),
                 )
             })
             .collect::<Vec<(&str, Attrs)>>()

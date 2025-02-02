@@ -4,44 +4,63 @@ use cosmic_text::{
 };
 use tiny_skia::{Paint, Pixmap, Rect, Transform};
 
+const CASKAYDIA_COVE_NERD_FONT: &[u8] =
+    include_bytes!("../../assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf");
+const PACIFICO_FONT: &[u8] = include_bytes!("../../assets/fonts/Pacifico-Regular.ttf");
+
 pub struct FontRenderer {
     font_system: FontSystem,
     scale_factor: f32,
-    metrics: Metrics,
 }
 
 impl FontRenderer {
-    pub fn new(
-        font_size: f32,
-        line_height: f32,
-        scale_factor: f32,
-        font_system: FontSystem,
-    ) -> FontRenderer {
-        let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
+    pub fn set_fonts_folder(&mut self, fonts_folder: Option<String>) {
+        self.font_system
+            .db_mut()
+            .load_fonts_dir(&fonts_folder.unwrap_or_default());
+    }
+
+    pub fn new(scale_factor: f32, fonts_folder: &str) -> FontRenderer {
+        // let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
+        let mut font_system = FontSystem::new();
+
+        font_system.db_mut().load_font_data(PACIFICO_FONT.into());
+        font_system
+            .db_mut()
+            .load_font_data(CASKAYDIA_COVE_NERD_FONT.into());
+        font_system.db_mut().load_fonts_dir(&fonts_folder);
 
         FontRenderer {
-            metrics,
             font_system,
             scale_factor,
         }
+    }
+
+    pub fn measure_text(&mut self, metrics: Metrics, text: &str) -> (f32, f32) {
+        let mut buffer = Buffer::new(&mut self.font_system, metrics.scale(self.scale_factor));
+
+        buffer.set_text(&mut self.font_system, text, Attrs::new(), Shaping::Advanced);
+
+        let layout_runs: LayoutRunIter = buffer.layout_runs();
+        let line_height = buffer.lines.len() as f32 * buffer.metrics().line_height;
+        let mut_width = layout_runs.fold(0f32, |max_width, run| max_width.max(run.line_w));
+
+        (
+            mut_width.ceil() / self.scale_factor,
+            line_height / self.scale_factor,
+        )
     }
 
     pub fn draw_text(
         &mut self,
         x: f32,
         y: f32,
-        w: f32,
-        h: f32,
+        metrics: Metrics,
         spans: Vec<(&str, Attrs)>,
         pixmap: &mut Pixmap,
     ) {
-        let mut buffer = Buffer::new(&mut self.font_system, self.metrics);
+        let mut buffer = Buffer::new(&mut self.font_system, metrics.scale(self.scale_factor));
 
-        buffer.set_size(
-            &mut self.font_system,
-            Some(w * self.scale_factor),
-            Some(h * self.scale_factor),
-        );
         buffer.set_rich_text(
             &mut self.font_system,
             spans,
@@ -56,14 +75,13 @@ impl FontRenderer {
         &mut self,
         x: f32,
         y: f32,
-        w: f32,
-        h: f32,
+        metrics: Metrics,
         line: &str,
         attrs: Attrs,
         align: Option<Align>,
         pixmap: &mut Pixmap,
     ) {
-        let mut buffer = Buffer::new(&mut self.font_system, self.metrics);
+        let mut buffer = Buffer::new(&mut self.font_system, metrics.scale(self.scale_factor));
         let mut line = if cfg!(unix) {
             BufferLine::new(
                 line,
@@ -84,7 +102,11 @@ impl FontRenderer {
 
         line.set_align(align);
         buffer.lines = vec![line];
-        buffer.set_size(&mut self.font_system, Some(w), Some(h));
+        buffer.set_size(
+            &mut self.font_system,
+            Some(pixmap.width() as f32),
+            Some(pixmap.height() as f32),
+        );
         self.draw(x, y, &mut buffer, pixmap);
     }
 

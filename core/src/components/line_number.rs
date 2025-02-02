@@ -6,7 +6,14 @@ use super::{
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
 };
-use crate::{config::Code, edges::margin::Margin, utils::code::CHAR_WIDTH};
+use crate::{
+    config::Code,
+    edges::margin::Margin,
+    utils::{
+        code::CHAR_WIDTH,
+        color::{parse_hex_to_cosmic_color, RgbaColor},
+    },
+};
 use cosmic_text::{Attrs, Color, Family, Metrics};
 
 #[derive(Default)]
@@ -57,7 +64,9 @@ impl Component for LineNumber {
             vec![(
                 &self.line_number_content.join("\n"),
                 Attrs::new()
-                    .color(Color::rgb(73, 81, 98))
+                    .color(parse_hex_to_cosmic_color(
+                        context.take_snapshot_params.line_number_color.as_str(),
+                    ))
                     .family(Family::Name(
                         &context.take_snapshot_params.code_config.font_family,
                     )),

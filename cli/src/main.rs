@@ -167,7 +167,10 @@ struct CLI {
 
     /// Set window shadow radius
     #[arg(long)]
-    shadow: Option<f32>,
+    shadow_radius: Option<f32>,
+
+    #[arg(long)]
+    shadow_color: Option<String>,
 
     /// Display MacOS style window bar
     #[arg(long)]

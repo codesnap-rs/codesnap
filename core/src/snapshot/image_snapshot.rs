@@ -121,6 +121,8 @@ impl ImageSnapshot {
 
             parsed_render_content.extend(render_content);
 
+            let shadow_color: RgbaColor = config.window.shadow.color.as_str().into();
+
             // Draw the image snapshot frame template
             let pixmap = Container::from_children(vec![Box::new(Background::new(
                 background_padding,
@@ -138,8 +140,8 @@ impl ImageSnapshot {
                         .shadow(
                             0.,
                             21.,
-                            config.window.shadow,
-                            Color::from_rgba8(0, 0, 0, 80),
+                            config.window.shadow.radius,
+                            Color::from(shadow_color),
                         ),
                     ),
                     Box::new(Watermark::new(watermark)),

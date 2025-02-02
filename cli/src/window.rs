@@ -1,4 +1,4 @@
-use codesnap::config::{Border, Margin, TitleConfig, Window, WindowBuilder};
+use codesnap::config::{Border, Margin, Shadow, TitleConfig, Window, WindowBuilder};
 
 use crate::CLI;
 
@@ -9,7 +9,13 @@ pub fn create_window(cli: &CLI, config_window: Window) -> anyhow::Result<Window>
         x: cli.margin_x.unwrap_or(config_window.margin.x),
         y: cli.margin_y.unwrap_or(config_window.margin.y),
     };
-    window.shadow = cli.shadow.unwrap_or(config_window.shadow);
+    window.shadow = Shadow {
+        color: cli
+            .shadow_color
+            .clone()
+            .unwrap_or(config_window.shadow.color),
+        radius: cli.shadow_radius.unwrap_or(config_window.shadow.radius),
+    };
     window.mac_window_bar = cli.mac_window_bar.unwrap_or(config_window.mac_window_bar);
     window.title = create_title(cli);
     window.border = create_border(cli);

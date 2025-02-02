@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tiny_skia::{Color, GradientStop};
 
 use crate::{
-    preset_background::BAMBOO,
+    preset_background::MEI,
     snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot},
     utils::color::RgbaColor,
 };
@@ -149,6 +149,15 @@ pub struct Border {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+pub struct Shadow {
+    #[builder(default = 20.)]
+    pub radius: f32,
+
+    #[builder(setter(into), default = String::from("#0000004d"))]
+    pub color: String,
+}
+
+#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 pub struct Window {
     #[builder(setter(into), default = MarginBuilder::default().build().unwrap())]
     pub margin: Margin,
@@ -162,8 +171,8 @@ pub struct Window {
     #[builder(default = true)]
     pub mac_window_bar: bool,
 
-    #[builder(default = 20.)]
-    pub shadow: f32,
+    #[builder(default = ShadowBuilder::default().build().unwrap())]
+    pub shadow: Shadow,
 }
 
 impl WindowBuilder {
@@ -344,7 +353,7 @@ pub struct SnapshotConfig {
     #[builder(setter(into), default = String::from("candy"))]
     pub theme: String,
 
-    #[builder(setter(into), default = BAMBOO.clone())]
+    #[builder(setter(into), default = MEI.clone())]
     pub background: Background,
 
     #[builder(setter(into), default = String::from("#495162"))]

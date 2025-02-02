@@ -7,7 +7,7 @@ use anyhow::Context;
 
 use crate::{components::interface::render_error::RenderError, config::SnapshotConfig};
 
-const CANDY_THEME: &[u8] = include_bytes!("../../assets/themes/candy.themedump");
+const PRESET_THEMES: &[u8] = include_bytes!("../../assets/themes/default.themedump");
 
 pub struct ThemeColor(Color);
 
@@ -24,11 +24,14 @@ impl Into<tiny_skia::Color> for ThemeColor {
 
 impl ThemeProvider {
     pub fn from(themes_folder: Option<String>, theme: &str) -> anyhow::Result<ThemeProvider> {
-        let theme_set = match themes_folder {
-            Some(theme_folder) => ThemeSet::load_from_folder(theme_folder)
-                .map_err(|_| RenderError::HighlightThemeLoadFailed)?,
-            None => from_binary(CANDY_THEME),
-        };
+        let mut theme_set: ThemeSet = from_binary(PRESET_THEMES);
+
+        if let Some(theme_folder) = themes_folder {
+            theme_set
+                .add_from_folder(theme_folder)
+                .map_err(|_| RenderError::HighlightThemeLoadFailed)?;
+        }
+
         let theme = theme_set
             .themes
             .get(theme)

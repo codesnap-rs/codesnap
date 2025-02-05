@@ -8,7 +8,7 @@ pub fn main() -> anyhow::Result<()> {
             .build()?,
     );
 
-    let snapshot = CodeSnap::default()
+    let snapshot = CodeSnap::from_default_theme()?
         .content(code_content)
         .build()?
         .create_snapshot()?;

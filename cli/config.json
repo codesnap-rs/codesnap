@@ -15,6 +15,10 @@
       "border": {
         "width": 1,
         "color": "#ffffff30"
+      },
+      "title_config": {
+        "color": "#ffffff",
+        "font_family": "Pacifico"
       }
     },
     "code_config": {

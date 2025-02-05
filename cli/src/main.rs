@@ -201,12 +201,12 @@ struct CLI {
     scale_factor: u8,
 
     /// Title font family
-    #[arg(long, default_value = "")]
-    title_font_family: String,
+    #[arg(long)]
+    title_font_family: Option<String>,
 
     /// Title font color
-    #[arg(long, default_value = "#aca9b2")]
-    title_color: String,
+    #[arg(long)]
+    title_color: Option<String>,
 
     /// CodeSnap supports custom themes, you can set the folder path of the themes
     #[arg(long)]
@@ -297,6 +297,7 @@ fn create_snapshot_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<S
     codesnap.fonts_folder = cli.fonts_folder.clone().or(codesnap.fonts_folder);
     codesnap.theme = cli.code_theme.clone();
     codesnap.line_number_color = cli.line_number_color.clone();
+    codesnap.title = cli.title.clone();
 
     Ok(codesnap)
 }

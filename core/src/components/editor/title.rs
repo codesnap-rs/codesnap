@@ -6,13 +6,12 @@ use crate::{
         render_error,
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
-    config::TitleConfig,
     edges::margin::Margin,
     utils::color::parse_hex_to_cosmic_color,
 };
 
 pub struct Title {
-    config: Option<TitleConfig>,
+    content: Option<String>,
     children: Vec<Box<dyn Component>>,
 }
 
@@ -26,11 +25,11 @@ impl Component for Title {
     }
 
     fn render_condition(&self, _context: &ComponentContext) -> bool {
-        self.config.is_some()
+        self.content.is_some()
     }
 
     fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
-        let calced_title_width = 6. * self.config.clone().unwrap().title.len() as f32;
+        let calced_title_width = 6. * self.content.clone().unwrap().len() as f32;
 
         RawComponentStyle::default()
             .margin(Margin {
@@ -48,25 +47,17 @@ impl Component for Title {
         _style: &ComponentStyle,
         _parent_style: &Style<f32>,
     ) -> render_error::Result<()> {
-        let config = self.config.clone().unwrap();
+        let config = context.take_snapshot_params.window.title_config.clone();
         let attrs = Attrs::new()
             .weight(Weight::BOLD)
             .color(parse_hex_to_cosmic_color(&config.color))
             .family(Family::Name(&config.font_family));
 
-        // FontRenderer::new(
-        //     10.,
-        //     10.,
-        //     context.scale_factor,
-        //     create_file_system_by_fonts_folder(&context.take_snapshot_params.fonts_folder),
-        // )
         context.font_renderer.lock().unwrap().draw_line(
             0.,
             render_params.y,
             Metrics::new(10., 10.),
-            // pixmap.width() as f32,
-            // pixmap.height() as f32,
-            &config.title,
+            &self.content.clone().unwrap(),
             attrs,
             Some(Align::Center),
             pixmap,
@@ -77,9 +68,9 @@ impl Component for Title {
 }
 
 impl Title {
-    pub fn from_config(config: Option<TitleConfig>) -> Title {
+    pub fn from_content(content: Option<String>) -> Title {
         Title {
-            config,
+            content,
             children: vec![],
         }
     }

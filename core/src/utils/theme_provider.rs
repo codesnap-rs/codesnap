@@ -7,7 +7,7 @@ use anyhow::Context;
 
 use crate::{components::interface::render_error::RenderError, config::SnapshotConfig};
 
-const PRESET_THEMES: &[u8] = include_bytes!("../../assets/themes/default.themedump");
+const PRESET_THEMES: &[u8] = include_bytes!("../../assets/code_themes/default.themedump");
 
 pub struct ThemeColor(Color);
 

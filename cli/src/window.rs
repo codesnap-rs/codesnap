@@ -17,7 +17,7 @@ pub fn create_window(cli: &CLI, config_window: Window) -> anyhow::Result<Window>
         radius: cli.shadow_radius.unwrap_or(config_window.shadow.radius),
     };
     window.mac_window_bar = cli.mac_window_bar.unwrap_or(config_window.mac_window_bar);
-    window.title = create_title(cli);
+    window.title_config = create_title(cli, config_window.title_config);
     window.border = create_border(cli);
 
     Ok(window)
@@ -30,12 +30,9 @@ fn create_border(cli: &CLI) -> Border {
     }
 }
 
-fn create_title(cli: &CLI) -> Option<TitleConfig> {
-    cli.title.as_ref().and_then(|title| {
-        Some(TitleConfig {
-            title: title.clone(),
-            font_family: cli.title_font_family.clone(),
-            color: cli.title_color.clone(),
-        })
-    })
+fn create_title(cli: &CLI, config: TitleConfig) -> TitleConfig {
+    TitleConfig {
+        font_family: cli.title_font_family.clone().unwrap_or(config.font_family),
+        color: cli.title_color.clone().unwrap_or(config.color),
+    }
 }

@@ -116,7 +116,7 @@ impl ImageSnapshot {
             let mut parsed_render_content: Vec<Box<dyn Component>> =
                 vec![Box::new(Row::from_children(vec![
                     Box::new(MacTitleBar::new(config.window.mac_window_bar)),
-                    Box::new(Title::from_config(config.window.title.clone())),
+                    Box::new(Title::from_content(config.title.clone())),
                 ]))];
 
             parsed_render_content.extend(render_content);

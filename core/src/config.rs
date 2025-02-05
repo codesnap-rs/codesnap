@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use tiny_skia::{Color, GradientStop};
 
 use crate::{
-    preset_background::MEI,
     snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot},
+    themes::get_theme,
     utils::color::RgbaColor,
 };
 
@@ -108,10 +108,7 @@ pub enum Background {
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 pub struct TitleConfig {
-    #[builder(setter(into))]
-    pub title: String,
-
-    #[builder(setter(into, strip_option), default = String::from(""))]
+    #[builder(setter(into, strip_option), default = String::from("CaskaydiaCove Nerd Font"))]
     pub font_family: String,
 
     #[builder(setter(into), default = String::from("#aca9b2"))]
@@ -162,8 +159,8 @@ pub struct Window {
     #[builder(setter(into), default = MarginBuilder::default().build().unwrap())]
     pub margin: Margin,
 
-    #[builder(setter(into), default = None)]
-    pub title: Option<TitleConfig>,
+    #[builder(setter(into), default = TitleConfigBuilder::default().build().unwrap())]
+    pub title_config: TitleConfig,
 
     #[builder(setter(into), default = BorderBuilder::default().build().unwrap())]
     pub border: Border,
@@ -179,7 +176,7 @@ impl WindowBuilder {
     pub fn from_window(window: Window) -> WindowBuilder {
         WindowBuilder {
             margin: Some(window.margin),
-            title: Some(window.title),
+            title_config: Some(window.title_config),
             border: Some(window.border),
             mac_window_bar: Some(window.mac_window_bar),
             shadow: Some(window.shadow),
@@ -302,7 +299,7 @@ impl WatermarkBuilder {
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
-#[builder(derive(serde::Deserialize, serde::Serialize))]
+#[builder(derive(serde::Deserialize, serde::Serialize, Debug))]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]
     pub window: Window,
@@ -353,11 +350,14 @@ pub struct SnapshotConfig {
     #[builder(setter(into), default = String::from("candy"))]
     pub theme: String,
 
-    #[builder(setter(into), default = MEI.clone())]
+    #[builder(setter(into))]
     pub background: Background,
 
     #[builder(setter(into), default = String::from("#495162"))]
     pub line_number_color: String,
+
+    #[builder(setter(into, strip_option), default = None)]
+    pub title: Option<String>,
 }
 
 impl CodeSnap {
@@ -371,13 +371,19 @@ impl CodeSnap {
         Ok(())
     }
 
+    pub fn from_default_theme() -> Result<CodeSnap, serde_json::Error> {
+        Self::from_theme("bamboo")
+    }
+
+    pub fn from_theme(theme_name: &str) -> Result<CodeSnap, serde_json::Error> {
+        let theme = get_theme(theme_name);
+
+        Self::from_config(&theme)
+    }
+
     pub fn from_config(config: &str) -> Result<CodeSnap, serde_json::Error> {
         serde_json::from_str::<CodeSnap>(config)
     }
-
-    // pub fn from_snapshot_config(snapshot_config: SnapshotConfig) -> CodeSnap {
-    //     snapshot_config as CodeSnap;
-    // }
 
     pub fn map_code_config<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where

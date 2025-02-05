@@ -4,6 +4,7 @@ version = "0.10.4"
 edition = "2021"
 description = "Pure Rust library for generating beautiful code snapshots"
 license = "MIT"
+repository = "https://github.com/mistricky/CodeSnap"
 
 [dependencies]
 tiny-skia = "0.11.4"

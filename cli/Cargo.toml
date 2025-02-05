@@ -4,6 +4,7 @@ version = "0.10.4"
 edition = "2021"
 description = "CLI tools for generating beautiful code snapshots"
 license = "MIT"
+repository = "https://github.com/mistricky/CodeSnap"
 
 [[bin]]
 name = "codesnap"
@@ -20,4 +21,3 @@ indicatif = "0.17.9"
 rand = "0.8.5"
 serde = "1.0.217"
 serde_json = "1.0.132"
-

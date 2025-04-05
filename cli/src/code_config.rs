@@ -9,7 +9,7 @@ pub fn create_code_config(cli: &CLI, code_config: CodeConfig) -> anyhow::Result<
     parsed_code_config.font_family = cli
         .code_font_family
         .clone()
-        .unwrap_or(parsed_code_config.font_family);
+        .unwrap_or(code_config.font_family);
 
     Ok(parsed_code_config)
 }

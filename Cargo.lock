@@ -356,7 +356,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap"
-version = "0.10.5"
+version = "0.10.7"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -383,7 +383,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-cli"
-version = "0.10.5"
+version = "0.10.7"
 dependencies = [
  "ansi_term",
  "anyhow",

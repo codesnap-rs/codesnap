@@ -34,13 +34,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --manifest-path core/Cargo.toml
+          args: --locked --manifest-path core/Cargo.toml
 
       - name: Publish cli to crates.io
         uses: actions-rs/cargo@v1
         with:
           command: publish
-          args: --manifest-path cli/Cargo.toml
+          args: --locked --manifest-path cli/Cargo.toml
 
       - name: Bump version and push tag
         id: tag_version

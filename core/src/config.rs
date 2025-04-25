@@ -1,4 +1,5 @@
 use derive_builder::Builder;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tiny_skia::{Color, GradientStop};
 
@@ -10,7 +11,7 @@ use crate::{
 
 pub const DEFAULT_WINDOW_MARGIN: f32 = 82.;
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Debug, JsonSchema)]
 #[serde(untagged)]
 pub enum DimensionValue {
     Num(f32),
@@ -41,7 +42,7 @@ impl<'de> Deserialize<'de> for DimensionValue {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Point<T> {
     pub x: T,
     pub y: T,
@@ -64,7 +65,7 @@ impl Point<DimensionValue> {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct LinearGradientStop {
     position: f32,
     color: String,
@@ -92,21 +93,21 @@ impl From<LinearGradientStop> for GradientStop {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct LinearGradient {
     pub start: GradientPoint,
     pub end: GradientPoint,
     pub stops: Vec<LinearGradientStop>,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(untagged)]
 pub enum Background {
     Solid(String),
     Gradient(LinearGradient),
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct TitleConfig {
     #[builder(setter(into, strip_option), default = String::from("CaskaydiaCove Nerd Font"))]
     pub font_family: String,
@@ -115,7 +116,7 @@ pub struct TitleConfig {
     pub color: String,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Margin {
     #[builder(setter(into, strip_option), default = DEFAULT_WINDOW_MARGIN)]
     pub x: f32,
@@ -124,7 +125,7 @@ pub struct Margin {
     pub y: f32,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema, Default)]
 pub struct Breadcrumbs {
     #[builder(setter(into, strip_option), default = String::from("/"))]
     pub separator: String,
@@ -136,7 +137,7 @@ pub struct Breadcrumbs {
     pub color: String,
 }
 
-#[derive(Clone, Builder, Default, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Default, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Border {
     #[builder(setter(into), default = String::from("#ffffff30"))]
     pub color: String,
@@ -145,7 +146,7 @@ pub struct Border {
     pub width: f32,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Shadow {
     #[builder(default = 20.)]
     pub radius: f32,
@@ -154,7 +155,7 @@ pub struct Shadow {
     pub color: String,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Window {
     #[builder(setter(into), default = MarginBuilder::default().build().unwrap())]
     pub margin: Margin,
@@ -184,14 +185,14 @@ impl WindowBuilder {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(untagged)]
 pub enum HighlightLine {
     Single(u32, String),
     Range(u32, u32, String),
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct CommandLineContent {
     #[builder(setter(into))]
     pub content: String,
@@ -200,7 +201,7 @@ pub struct CommandLineContent {
     pub full_command: String,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Code {
     #[builder(setter(into))]
     pub content: String,
@@ -224,7 +225,7 @@ pub struct Code {
     pub file_path: Option<String>,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema, Default)]
 pub struct CommandOutputConfig {
     #[builder(setter(into), default = String::from("❯"))]
     pub prompt: String,
@@ -242,14 +243,14 @@ pub struct CommandOutputConfig {
     pub string_arg_color: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(untagged)]
 pub enum Content {
     Code(Code),
     CommandOutput(Vec<CommandLineContent>),
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema, Default)]
 pub struct CodeConfig {
     // #[builder(setter(into), default = String::from(""))]
     // #[serde(default)]
@@ -271,7 +272,7 @@ pub struct CodeConfig {
 
 /// Draw a watermark below the code, you can use this to add a logo or any other text
 /// The watermark is designed as a place for users to provide personalize label
-#[derive(Serialize, Deserialize, Clone, Builder, Debug)]
+#[derive(Serialize, Deserialize, Clone, Builder, Debug, JsonSchema)]
 pub struct Watermark {
     #[builder(setter(into))]
     pub content: String,
@@ -297,9 +298,9 @@ impl WatermarkBuilder {
     }
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
-#[builder(derive(serde::Deserialize, serde::Serialize, Debug))]
+#[builder(derive(serde::Deserialize, serde::Serialize, Debug, JsonSchema))]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]
     pub window: Window,

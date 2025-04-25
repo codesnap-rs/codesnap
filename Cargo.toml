@@ -1,4 +1,4 @@
 [workspace]
 resolver = "2"
 
-members = ["cli", "core"]
+members = ["cli", "core", "xtask"]

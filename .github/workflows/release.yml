@@ -98,3 +98,21 @@ jobs:
             Of course, you can install CodeSnap manually by downloading the following binaries.
 
             ${{steps.build_changelog.outputs.changelog}}
+
+  update-config-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Build config schema
+        uses: actions-rs/cargo@v1
+        with:
+          command: xtask
+          args: schema
+
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: "[Update] snapshot config schema"

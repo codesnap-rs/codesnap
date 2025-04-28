@@ -94,7 +94,7 @@ impl ImageSnapshot {
             let editor_background_color = theme_provider.theme_background();
             let font_renderer = Mutex::new(FontRenderer::new(
                 config.scale_factor as f32,
-                config.fonts_folder.clone().unwrap_or_default(),
+                config.fonts_folders.clone(),
             ));
             let context = ComponentContext {
                 scale_factor: config.scale_factor as f32,

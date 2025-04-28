@@ -14,7 +14,7 @@ pub struct FontRenderer {
 }
 
 impl FontRenderer {
-    pub fn new(scale_factor: f32, fonts_folder: Vec<String>) -> FontRenderer {
+    pub fn new(scale_factor: f32, fonts_folders: Vec<String>) -> FontRenderer {
         // let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
         let mut font_system = FontSystem::new();
 
@@ -23,7 +23,7 @@ impl FontRenderer {
             .db_mut()
             .load_font_data(CASKAYDIA_COVE_NERD_FONT.into());
 
-        for folder in fonts_folder {
+        for folder in fonts_folders {
             font_system.db_mut().load_fonts_dir(folder);
         }
 

@@ -325,29 +325,29 @@ pub struct SnapshotConfig {
     pub scale_factor: u8,
 
     /// CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme
-    /// for the snapshot. If the `themes_folder` is provided, CodeSnap will load the theme from
+    /// for the snapshot. If the `themes_folders` is provided, CodeSnap will load the theme from
     /// the folder, otherwise, CodeSnap will load the default themes.
     ///
     /// Visit https://github.com/trishume/syntect for more detail
     #[builder(setter(into, strip_option), default = vec![])]
-    pub themes_folder: Vec<String>,
+    pub themes_folders: Vec<String>,
 
-    /// Load fonts from the fonts_folder to render the code, CodeSnap use fonts which you have
-    /// installed on your system by default, but you can still provide `fonts_folder` to tell
+    /// Load fonts from the fonts_folders to render the code, CodeSnap use fonts which you have
+    /// installed on your system by default, but you can still provide `fonts_folders` to tell
     /// CodeSnap to load extra fonts from the folder.
     ///
     /// This config is useful when you want to develop a tool based on CodeSnap, you can package
     /// some fonts with your tool and publish, so that users can use these fonts without installing
     /// them manually on their system.
     #[builder(setter(into, strip_option), default = vec![])]
-    pub fonts_folder: Vec<String>,
+    pub fonts_folders: Vec<String>,
 
     /// CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme
     /// for code highlighting and background.
-    /// The theme is load from the `themes_folder`(if not provided, CodeSnap load the default
+    /// The theme is load from the `themes_folders`(if not provided, CodeSnap load the default
     /// themes), you can use the theme name to specify the theme you want to use.
     ///
-    /// See `themes_folder` config for more detail.
+    /// See `themes_folders` config for more detail.
     #[builder(setter(into), default = String::from("candy"))]
     pub theme: String,
 

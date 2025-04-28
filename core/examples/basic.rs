@@ -10,7 +10,6 @@ pub fn main() -> anyhow::Result<()> {
 
     let snapshot = CodeSnap::from_default_theme()?
         .content(code_content)
-        .fonts_folder("/Users/zhanhaozhao/repositories/codesnap/core/assets/foo")
         .build()?
         .create_snapshot()?;
 

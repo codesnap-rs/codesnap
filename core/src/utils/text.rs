@@ -15,16 +15,15 @@ pub struct FontRenderer {
 
 impl FontRenderer {
     pub fn new(scale_factor: f32, fonts_folders: Vec<String>) -> FontRenderer {
-        // let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
         let mut font_system = FontSystem::new();
+        let font_db = font_system.db_mut();
 
-        font_system.db_mut().load_font_data(PACIFICO_FONT.into());
-        font_system
-            .db_mut()
-            .load_font_data(CASKAYDIA_COVE_NERD_FONT.into());
+        font_db.load_system_fonts();
+        font_db.load_font_data(PACIFICO_FONT.into());
+        font_db.load_font_data(CASKAYDIA_COVE_NERD_FONT.into());
 
         for folder in fonts_folders {
-            font_system.db_mut().load_fonts_dir(folder);
+            font_db.load_fonts_dir(folder);
         }
 
         FontRenderer {

@@ -14,13 +14,7 @@ pub struct FontRenderer {
 }
 
 impl FontRenderer {
-    pub fn set_fonts_folder(&mut self, fonts_folder: Option<String>) {
-        self.font_system
-            .db_mut()
-            .load_fonts_dir(&fonts_folder.unwrap_or_default());
-    }
-
-    pub fn new(scale_factor: f32, fonts_folder: &str) -> FontRenderer {
+    pub fn new(scale_factor: f32, fonts_folder: Vec<String>) -> FontRenderer {
         // let metrics = Metrics::new(font_size, line_height).scale(scale_factor.clone());
         let mut font_system = FontSystem::new();
 
@@ -28,7 +22,10 @@ impl FontRenderer {
         font_system
             .db_mut()
             .load_font_data(CASKAYDIA_COVE_NERD_FONT.into());
-        font_system.db_mut().load_fonts_dir(&fonts_folder);
+
+        for folder in fonts_folder {
+            font_system.db_mut().load_fonts_dir(folder);
+        }
 
         FontRenderer {
             font_system,
@@ -138,22 +135,4 @@ impl FontRenderer {
             },
         );
     }
-}
-
-pub fn create_file_system_by_fonts_folder(fonts_folder: &Option<String>) -> FontSystem {
-    let mut font_system = FontSystem::new();
-
-    // If user has provided a custom fonts folder, load fonts from it
-    if let Some(fonts_folder) = fonts_folder {
-        font_system.db_mut().load_fonts_dir(fonts_folder);
-    }
-
-    font_system
-}
-
-pub fn create_file_system_from_binary(binary: &[u8], fonts_folder: &Option<String>) -> FontSystem {
-    let mut font_system = create_file_system_by_fonts_folder(fonts_folder);
-
-    font_system.db_mut().load_font_data(binary.into());
-    font_system
 }

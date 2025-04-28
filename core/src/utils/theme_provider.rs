@@ -23,13 +23,15 @@ impl Into<tiny_skia::Color> for ThemeColor {
 }
 
 impl ThemeProvider {
-    pub fn from(themes_folder: Option<String>, theme: &str) -> anyhow::Result<ThemeProvider> {
+    pub fn from(themes_folder: Option<Vec<String>>, theme: &str) -> anyhow::Result<ThemeProvider> {
         let mut theme_set: ThemeSet = from_binary(PRESET_THEMES);
 
         if let Some(theme_folder) = themes_folder {
-            theme_set
-                .add_from_folder(theme_folder)
-                .map_err(|_| RenderError::HighlightThemeLoadFailed)?;
+            for folder in theme_folder {
+                theme_set
+                    .add_from_folder(folder)
+                    .map_err(|_| RenderError::HighlightThemeLoadFailed)?;
+            }
         }
 
         let theme = theme_set
@@ -46,6 +48,11 @@ impl ThemeProvider {
     }
 
     pub fn theme_background(&self) -> ThemeColor {
-        ThemeColor(self.theme.settings.background.unwrap())
+        ThemeColor(self.theme.settings.background.unwrap_or(Color {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 0,
+        }))
     }
 }

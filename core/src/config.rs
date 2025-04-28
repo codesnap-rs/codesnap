@@ -329,8 +329,8 @@ pub struct SnapshotConfig {
     /// the folder, otherwise, CodeSnap will load the default themes.
     ///
     /// Visit https://github.com/trishume/syntect for more detail
-    #[builder(setter(into, strip_option), default = None)]
-    pub themes_folder: Option<String>,
+    #[builder(setter(into, strip_option), default = vec![])]
+    pub themes_folder: Vec<String>,
 
     /// Load fonts from the fonts_folder to render the code, CodeSnap use fonts which you have
     /// installed on your system by default, but you can still provide `fonts_folder` to tell
@@ -339,8 +339,8 @@ pub struct SnapshotConfig {
     /// This config is useful when you want to develop a tool based on CodeSnap, you can package
     /// some fonts with your tool and publish, so that users can use these fonts without installing
     /// them manually on their system.
-    #[builder(setter(into, strip_option), default = None)]
-    pub fonts_folder: Option<String>,
+    #[builder(setter(into, strip_option), default = vec![])]
+    pub fonts_folder: Vec<String>,
 
     /// CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme
     /// for code highlighting and background.

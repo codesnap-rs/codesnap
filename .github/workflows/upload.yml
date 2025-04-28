@@ -53,7 +53,7 @@ jobs:
       - name: Update codesnap formula
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.FORMULA_RELEASE }}
           repository: mistricky/homebrew-tap
           event-type: release
           client-payload: '{"version": "${{ github.event.release.tag_name }}", "formula_name": "codesnap", "formula_desc": "Pure Rust tool to generate beautiful code snapshots"}'

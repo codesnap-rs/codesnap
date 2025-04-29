@@ -8,17 +8,23 @@ mod range;
 mod watermark;
 mod window;
 
+use std::fs;
 use std::fs::read_to_string;
+use std::path::Path;
 
 use anyhow::bail;
 use clap::value_parser;
 use clap::Parser;
 use code::create_code;
 use code_config::create_code_config;
+use codesnap::assets::Assets;
+use codesnap::assets::AssetsURL;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
+use codesnap::utils::path::parse_home_variable;
 use config::CodeSnapCLIConfig;
 use egg::say;
+use theme_converter::{parser::Parser as ThemeParser, vscode};
 use watermark::create_watermark;
 use window::create_window;
 
@@ -76,8 +82,8 @@ struct CLI {
     code_font_family: Option<String>,
 
     /// Code theme for the code snippet
-    #[arg(long, default_value = "candy")]
-    code_theme: String,
+    #[arg(long)]
+    code_theme: Option<String>,
 
     /// Breadcrumbs is a useful and unique feature in CodeSnap, it shows the path of the file
     /// so that users can know where the code snippet comes from.
@@ -208,15 +214,6 @@ struct CLI {
     #[arg(long)]
     title_color: Option<String>,
 
-    /// CodeSnap supports custom themes, you can set the folder path of the themes
-    #[arg(long)]
-    themes_folder: Option<String>,
-
-    /// CodeSnap supports custom fonts, you can set the folder path of the fonts, or CodeSnap will
-    /// use the system fonts.
-    #[arg(long)]
-    fonts_folder: Option<String>,
-
     /// Set background color of the snapshot
     #[arg(long)]
     background: Option<String>,
@@ -267,8 +264,8 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
     Ok(format!("Snapshot saved to {} successful!", cli.output))
 }
 
-fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Result<()> {
-    let snapshot = create_snapshot_config(&cli, codesnap)?;
+async fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Result<()> {
+    let snapshot = create_snapshot_config(&cli, codesnap).await?;
     let snapshot_type = cli.r#type.clone();
 
     if snapshot_type == "ascii" && cli.output != "clipboard" {
@@ -283,7 +280,41 @@ fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Resul
     Ok(())
 }
 
-fn create_snapshot_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<SnapshotConfig> {
+// If the code theme is URL, download it and return the path
+async fn parse_code_theme(path: &str, code_theme: &str) -> anyhow::Result<String> {
+    let assets_url = AssetsURL::from_url(code_theme);
+
+    match assets_url {
+        Ok(assets_url) => {
+            let assets = Assets::from(path);
+            let assets_store_path_str = assets.download(code_theme).await?;
+            let assets_store_path = Path::new(&assets_store_path_str);
+            let extension = assets_store_path.extension().unwrap_or_default();
+
+            // If the code theme is JSON file, we treat it as a VSCode theme file
+            if extension == "json" {
+                let root = vscode::VSCodeThemeParser::from_config(&assets_store_path_str)
+                    .unwrap()
+                    .parse(&assets_url.name);
+                let path = Path::new(&assets_store_path)
+                    .with_file_name(format!("{}.{}", &assets_url.name, "tmTheme"));
+
+                plist::to_writer_xml(&mut fs::File::create(path).unwrap(), &root)?;
+            }
+
+            Ok(assets_url.name)
+        }
+        Err(_) => {
+            // If the code theme is not a URL, we will use it as a local file
+            Ok(code_theme.to_string())
+        }
+    }
+}
+
+async fn create_snapshot_config(
+    cli: &CLI,
+    mut codesnap: CodeSnap,
+) -> anyhow::Result<SnapshotConfig> {
     // Build screenshot config
     let mut codesnap = codesnap
         .map_code_config(|code_config| create_code_config(&cli, code_config))?
@@ -293,11 +324,25 @@ fn create_snapshot_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<S
         .scale_factor(cli.scale_factor)
         .build()?;
 
-    codesnap.themes_folder = cli.themes_folder.clone().or(codesnap.themes_folder);
-    codesnap.fonts_folder = cli.fonts_folder.clone().or(codesnap.fonts_folder);
-    codesnap.theme = cli.code_theme.clone();
+    let mut themes_folders = codesnap.themes_folders;
+    let remote_themes_path = parse_home_variable("~/.config/CodeSnap/remote_themes")?;
+
+    std::fs::create_dir_all(&remote_themes_path)?;
+    // The remote themes folder is used to store the themes downloaded from the internet
+    themes_folders.push(remote_themes_path.clone());
+
+    codesnap.themes_folders = themes_folders;
+    codesnap.fonts_folders = codesnap.fonts_folders;
     codesnap.line_number_color = cli.line_number_color.clone();
     codesnap.title = cli.title.clone();
+    codesnap.theme = parse_code_theme(
+        &remote_themes_path,
+        cli.code_theme
+            .clone()
+            .unwrap_or(codesnap.theme.clone())
+            .as_ref(),
+    )
+    .await?;
 
     Ok(codesnap)
 }
@@ -322,7 +367,7 @@ fn with_spinner<T>(cb: impl Fn() -> T) -> T {
     result
 }
 
-fn generate_snapshot() -> anyhow::Result<()> {
+async fn generate_snapshot() -> anyhow::Result<()> {
     let cli = CLI::parse();
 
     // Create CodeSnap config from config, if the user does not have a config file, we will create
@@ -335,7 +380,7 @@ fn generate_snapshot() -> anyhow::Result<()> {
         CodeSnapCLIConfig::from(&config::get_config_content()?)?
     };
 
-    generate_snapshot_with_config(&cli, codesnap_cli_config.snapshot_config)?;
+    generate_snapshot_with_config(&cli, codesnap_cli_config.snapshot_config).await?;
 
     if codesnap_cli_config.print_eggs {
         say();
@@ -344,8 +389,9 @@ fn generate_snapshot() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn main() {
-    if let Err(err) = generate_snapshot() {
+#[tokio::main]
+async fn main() {
+    if let Err(err) = generate_snapshot().await {
         logger::error(&err.to_string());
         return;
     };

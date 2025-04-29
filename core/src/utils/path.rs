@@ -18,7 +18,7 @@ fn create_temp_file_name() -> String {
     format!("CodeSnap_{}", formatted_time)
 }
 
-fn parse_home_variable(path: &str) -> Result<String, VarError> {
+pub fn parse_home_variable(path: &str) -> Result<String, VarError> {
     if cfg!(windows) {
         return Ok(path.to_string());
     }

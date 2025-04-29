@@ -18,6 +18,9 @@ codesnap = { path = "../core", version = "0.10.9" }
 ferris-says = "0.3.2"
 home = "0.5.9"
 indicatif = "0.17.9"
+plist = "1.7.1"
 rand = "0.8.5"
 serde = "1.0.217"
 serde_json = "1.0.132"
+theme-converter = "0.1.2"
+tokio = { version = "1.44.2", features = ["full"] }

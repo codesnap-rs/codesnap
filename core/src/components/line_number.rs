@@ -9,12 +9,9 @@ use super::{
 use crate::{
     config::Code,
     edges::margin::Margin,
-    utils::{
-        code::CHAR_WIDTH,
-        color::{parse_hex_to_cosmic_color, RgbaColor},
-    },
+    utils::{code::CHAR_WIDTH, color::parse_hex_to_cosmic_color},
 };
-use cosmic_text::{Attrs, Color, Family, Metrics};
+use cosmic_text::{Attrs, Family, Metrics};
 
 #[derive(Default)]
 pub struct LineNumber {

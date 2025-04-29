@@ -39,7 +39,11 @@ pub fn create_code(cli: &CLI, code_config: Code) -> anyhow::Result<Content> {
                 .clone()
                 .into_iter()
                 .map(|command| {
-                    let output = execute_command(&command);
+                    let output = if cli.skip {
+                        "".to_string()
+                    } else {
+                        execute_command(&command)
+                    };
 
                     CommandLineContentBuilder::default()
                         .full_command(&command)

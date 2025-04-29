@@ -64,8 +64,13 @@ struct CLI {
     #[arg(short, long)]
     output: String,
 
+    /// Executing a command and taking the output as the code snippet.
     #[arg(long, short, num_args=1..)]
     execute: Vec<String>,
+
+    /// Skip run the command to get output, just take the command as the input
+    #[arg(long)]
+    skip: bool,
 
     /// You can set the range of the code snippet to display
     /// for example, display the 3rd to 5th:

@@ -1,5 +1,7 @@
 # Dist
 target
+# WASM
+pkg
 
 # Platform
 .DS_Store

@@ -8,13 +8,13 @@ repository = "https://github.com/mistricky/CodeSnap"
 
 [dependencies]
 tiny-skia = "0.11.4"
-syntect = "5.2.0"
+syntect = { version = "5.2.0", default-features = false, features = ["default-fancy"] }
 cosmic-text = "0.12.0"
 serde = "1.0.204"
-arboard = { features = ["wayland-data-control"], version = "3.4.0" }
+arboard = { features = ["wayland-data-control"], version = "3.4.0", optional = true }
 thiserror = "1.0.63"
 regex = "1.10.5"
-two-face = "0.4.0"
+two-face = { version = "0.4.0", default-features = false, features = ["syntect-fancy"] }
 cached = "0.53.1"
 anyhow = "1.0.89"
 rgb = "0.8.50"
@@ -33,3 +33,11 @@ reqwest = "0.12.15"
 mime_guess = "2.0.5"
 url = "2.5.4"
 
+[features]
+default = []
+copy = ["arboard"]
+full = ["copy"]
+
+[[example]]
+name = "basic"
+features = ["copy"]

@@ -78,14 +78,7 @@ impl FontRenderer {
         pixmap: &mut Pixmap,
     ) {
         let mut buffer = Buffer::new(&mut self.font_system, metrics.scale(self.scale_factor));
-        let mut line = if cfg!(unix) {
-            BufferLine::new(
-                line,
-                LineEnding::Lf,
-                AttrsList::new(attrs),
-                Shaping::Advanced,
-            )
-        } else if cfg!(windows) {
+        let mut line = if cfg!(windows) {
             BufferLine::new(
                 line,
                 LineEnding::CrLf,
@@ -93,7 +86,12 @@ impl FontRenderer {
                 Shaping::Advanced,
             )
         } else {
-            panic!("Unsupported OS")
+            BufferLine::new(
+                line,
+                LineEnding::Lf,
+                AttrsList::new(attrs),
+                Shaping::Advanced,
+            )
         };
 
         line.set_align(align);

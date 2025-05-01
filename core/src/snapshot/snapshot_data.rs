@@ -1,7 +1,10 @@
+#[cfg(feature = "copy")]
 use arboard::ImageData;
 use tiny_skia::Pixmap;
 
-use crate::utils::{clipboard::Clipboard, path::parse_file_name};
+#[cfg(feature = "copy")]
+use crate::utils::clipboard::Clipboard;
+use crate::utils::path::parse_file_name;
 use std::fs::write;
 
 pub enum SnapshotData {
@@ -39,6 +42,7 @@ impl SnapshotData {
         })
     }
 
+    #[cfg(feature = "copy")]
     pub fn copy(&self) -> anyhow::Result<()> {
         let mut clipboard = Clipboard::new()?;
 

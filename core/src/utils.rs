@@ -1,4 +1,5 @@
 pub mod blur;
+#[cfg(feature = "copy")]
 pub mod clipboard;
 pub mod code;
 pub mod color;

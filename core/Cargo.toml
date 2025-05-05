@@ -33,6 +33,7 @@ schemars = "0.8.22"
 reqwest = "0.12.15"
 mime_guess = "2.0.5"
 url = "2.5.4"
+hyperpolyglot = { git = "https://github.com/codesnap-rs/hyperpolyglot", branch = "master" }
 
 [features]
 default = []

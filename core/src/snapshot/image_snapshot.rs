@@ -159,10 +159,7 @@ impl ImageSnapshot {
     ) -> anyhow::Result<Vec<Box<dyn Component>>> {
         let code_lines = code_content.content.lines().collect::<Vec<&str>>();
         let view: Vec<Box<dyn Component>> = vec![
-            Box::new(Breadcrumbs::from(
-                code_content.has_breadcrumbs,
-                code_content.file_path.clone(),
-            )),
+            Box::new(Breadcrumbs::from(code_content.file_path.clone())),
             Box::new(CodeBlock::from_children(vec![
                 Box::new(HighlightCodeBlock::from(
                     code_content.highlight_lines.clone(),

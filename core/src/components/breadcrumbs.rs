@@ -17,7 +17,6 @@ const LINE_HEIGHT: f32 = 15.;
 
 pub struct Breadcrumbs {
     children: Vec<Box<dyn Component>>,
-    has_breadcrumbs: bool,
     path: Option<String>,
 }
 
@@ -30,14 +29,14 @@ impl Component for Breadcrumbs {
         &self.children
     }
 
-    fn render_condition(&self, _context: &ComponentContext) -> bool {
-        self.has_breadcrumbs
+    fn render_condition(&self, context: &ComponentContext) -> bool {
+        context.take_snapshot_params.code_config.breadcrumbs.enable
     }
 
-    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
+    fn style(&self, context: &ComponentContext) -> RawComponentStyle {
         let style = RawComponentStyle::default();
 
-        if !self.has_breadcrumbs {
+        if !context.take_snapshot_params.code_config.breadcrumbs.enable {
             return style;
         }
 
@@ -95,11 +94,10 @@ impl Component for Breadcrumbs {
 }
 
 impl Breadcrumbs {
-    pub fn from(has_breadcrumbs: bool, file_path: Option<String>) -> Breadcrumbs {
+    pub fn from(file_path: Option<String>) -> Breadcrumbs {
         Breadcrumbs {
             children: vec![],
             path: file_path,
-            has_breadcrumbs,
         }
     }
 }

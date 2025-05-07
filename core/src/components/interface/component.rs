@@ -21,6 +21,12 @@ lazy_static! {
     static ref STYLE_MAP: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
 }
 
+pub(crate) fn query_style(name: &'static str) -> Option<Style<f32>> {
+    let style_map = STYLE_MAP.lock().unwrap();
+
+    style_map.get(name).cloned()
+}
+
 pub struct ComponentContext {
     pub scale_factor: f32,
     pub take_snapshot_params: Arc<SnapshotConfig>,
@@ -144,12 +150,13 @@ pub trait Component {
         let width = self.parse_size(style.width, width, parent_style.map(|s| s.width))
             + style.padding.horizontal()
             + style.margin.horizontal();
+
         let style = Style {
             min_width: style.min_width,
-            width: if width > style.min_width {
-                width
-            } else {
+            width: if width < style.min_width {
                 style.min_width
+            } else {
+                width
             },
             height: self.parse_size(style.height, height, parent_style.map(|s| s.height))
                 + style.padding.vertical()

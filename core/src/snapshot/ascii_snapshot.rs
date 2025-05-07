@@ -11,6 +11,7 @@ const SPACE_BOTH_SIDE: usize = 2;
 
 pub struct ASCIISnapshot {
     code: Code,
+    has_breadcrumbs: bool,
 }
 
 fn optional(component: String, is_view: bool) -> String {
@@ -32,6 +33,7 @@ impl ASCIISnapshot {
         match config.content {
             Content::Code(ref raw_code) => Ok(ASCIISnapshot {
                 code: raw_code.clone(),
+                has_breadcrumbs: config.code_config.breadcrumbs.enable,
             }),
             _ => Err(anyhow::anyhow!("The code content is not raw")),
         }
@@ -84,7 +86,7 @@ impl ASCIISnapshot {
                 "{}{line}",
                 text_line(&self.code.file_path.clone().unwrap_or(String::from("")))
             ),
-            self.code.has_breadcrumbs,
+            self.has_breadcrumbs,
         );
 
         format!("{top_frame}{breadcrumbs}{code}{bottom_frame}")

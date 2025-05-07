@@ -16,6 +16,7 @@ pub fn create_code_config(cli: &CLI, code_config: CodeConfig) -> anyhow::Result<
 
 fn map_breadcrumbs(cli: &CLI, breadcrumbs_config: Breadcrumbs) -> Breadcrumbs {
     Breadcrumbs {
+        enable: cli.has_breadcrumbs.unwrap_or(breadcrumbs_config.enable),
         separator: cli
             .breadcrumbs_separator
             .clone()

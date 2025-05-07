@@ -22,6 +22,7 @@
   "code_config": {
     "font_family": "CaskaydiaCove Nerd Font",
     "breadcrumbs": {
+      "enable": false,
       "separator": "/",
       "color": "#80848b",
       "font_family": "CaskaydiaCove Nerd Font"

@@ -127,6 +127,9 @@ pub struct Margin {
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema, Default)]
 pub struct Breadcrumbs {
+    #[builder(default = false)]
+    pub enable: bool,
+
     #[builder(setter(into, strip_option), default = String::from("/"))]
     pub separator: String,
 
@@ -205,9 +208,6 @@ pub struct CommandLineContent {
 pub struct Code {
     #[builder(setter(into))]
     pub content: String,
-
-    #[builder(default = false)]
-    pub has_breadcrumbs: bool,
 
     #[builder(setter(into, strip_option), default = None)]
     pub start_line_number: Option<u32>,

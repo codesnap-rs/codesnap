@@ -58,10 +58,12 @@ impl ASCIISnapshot {
             }
             None => frame_width,
         };
-        let line = format!("│{}│\n", "─".repeat(frame_width));
-        let frame_width_with_content = frame_width - 1;
-        let top_frame = format!("╭{}╮\n", "─".repeat(frame_width));
-        let bottom_frame = format!("╰{}╯", "─".repeat(frame_width));
+        let frame_width_with_space = frame_width + SPACE_BOTH_SIDE;
+        let line = "─".repeat(frame_width_with_space);
+        let breadcurmbs_line = format!("│{}│\n", line);
+        let frame_width_with_content = frame_width;
+        let top_frame = format!("╭{}╮\n", line);
+        let bottom_frame = format!("╰{}╯", line);
         let code = code
             .lines()
             .enumerate()
@@ -76,14 +78,14 @@ impl ASCIISnapshot {
                         ),
                         None => line.to_string(),
                     },
-                    frame_width_with_content - 1
+                    frame_width_with_content
                 )
             })
             .collect::<String>();
-        let text_line = |text: &str| format!("│ {:1$}│\n", text, frame_width_with_content);
+        let text_line = |text: &str| format!("│ {:1$} │\n", text, frame_width_with_content);
         let breadcrumbs = optional(
             format!(
-                "{}{line}",
+                "{}{breadcurmbs_line}",
                 text_line(&self.code.file_path.clone().unwrap_or(String::from("")))
             ),
             self.has_breadcrumbs,

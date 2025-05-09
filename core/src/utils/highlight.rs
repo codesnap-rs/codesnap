@@ -37,11 +37,12 @@ impl Highlight {
                     .into_iter()
                     .map(|(style, str)| {
                         let syntect::highlighting::Color { r, g, b, a } = style.foreground;
+                        let attrs_cloned = attrs.clone();
                         let attrs = match style.font_style {
-                            FontStyle::BOLD => attrs.weight(Weight::BOLD),
-                            FontStyle::ITALIC => attrs.style(Style::Italic),
-                            FontStyle::UNDERLINE => attrs.style(Style::Normal),
-                            _ => attrs,
+                            FontStyle::BOLD => attrs_cloned.weight(Weight::BOLD),
+                            FontStyle::ITALIC => attrs_cloned.style(Style::Italic),
+                            FontStyle::UNDERLINE => attrs_cloned.style(Style::Normal),
+                            _ => attrs_cloned,
                         };
 
                         (str, attrs.color(cosmic_text::Color::rgba(r, g, b, a)))

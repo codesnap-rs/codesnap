@@ -1,11 +1,19 @@
+use std::sync::Arc;
+
 use cosmic_text::{
-    Align, Attrs, AttrsList, Buffer, BufferLine, Color, FontSystem, LayoutRunIter, LineEnding,
-    Metrics, Shaping, SwashCache,
+    fontdb::{Database, Source},
+    Align, Attrs, AttrsList, Buffer, BufferLine, Color, Family, FontSystem, LayoutRunIter,
+    LineEnding, Metrics, Shaping, SwashCache,
 };
 use tiny_skia::{Paint, Pixmap, Rect, Transform};
 
 const CASKAYDIA_COVE_NERD_FONT: &[u8] =
     include_bytes!("../../assets/fonts/CaskaydiaCoveNerdFont-Regular.ttf");
+const CASKAYDIA_COVE_BOLD_NERD_FONT: &[u8] =
+    include_bytes!("../../assets/fonts/CaskaydiaCoveNerdFont-Bold.ttf");
+const CASKAYDIA_COVE_ITALIC_NERD_FONT: &[u8] =
+    include_bytes!("../../assets/fonts/CaskaydiaCoveNerdFont-Italic.ttf");
+
 const PACIFICO_FONT: &[u8] = include_bytes!("../../assets/fonts/Pacifico-Regular.ttf");
 
 pub struct FontRenderer {
@@ -13,14 +21,24 @@ pub struct FontRenderer {
     scale_factor: f32,
 }
 
+fn get_default_attrs<'a>() -> Attrs<'a> {
+    Attrs::new().family(Family::Name("CaskaydiaCove Nerd Font"))
+}
+
 impl FontRenderer {
     pub fn new(scale_factor: f32, fonts_folders: Vec<String>) -> FontRenderer {
-        let mut font_system = FontSystem::new();
-        let font_db = font_system.db_mut();
+        let fonts_data: Vec<&[u8]> = vec![
+            CASKAYDIA_COVE_NERD_FONT,
+            PACIFICO_FONT,
+            CASKAYDIA_COVE_BOLD_NERD_FONT,
+            CASKAYDIA_COVE_ITALIC_NERD_FONT,
+        ];
+        let sources = fonts_data
+            .into_iter()
+            .map(|data| Source::Binary(Arc::new(data)));
 
-        font_db.load_system_fonts();
-        font_db.load_font_data(PACIFICO_FONT.into());
-        font_db.load_font_data(CASKAYDIA_COVE_NERD_FONT.into());
+        let mut font_system: FontSystem = FontSystem::new_with_fonts(sources);
+        let font_db = font_system.db_mut();
 
         for folder in fonts_folders {
             font_db.load_fonts_dir(folder);
@@ -35,7 +53,12 @@ impl FontRenderer {
     pub fn measure_text(&mut self, metrics: Metrics, text: &str) -> (f32, f32) {
         let mut buffer = Buffer::new(&mut self.font_system, metrics.scale(self.scale_factor));
 
-        buffer.set_text(&mut self.font_system, text, Attrs::new(), Shaping::Advanced);
+        buffer.set_text(
+            &mut self.font_system,
+            text,
+            &get_default_attrs(),
+            Shaping::Advanced,
+        );
 
         let layout_runs: LayoutRunIter = buffer.layout_runs();
         let line_height = buffer.lines.len() as f32 * buffer.metrics().line_height;
@@ -60,8 +83,9 @@ impl FontRenderer {
         buffer.set_rich_text(
             &mut self.font_system,
             spans,
-            Attrs::new(),
+            &get_default_attrs(),
             Shaping::Advanced,
+            None,
         );
 
         self.draw(x, y, &mut buffer, pixmap);
@@ -78,20 +102,11 @@ impl FontRenderer {
         pixmap: &mut Pixmap,
     ) {
         let mut buffer = Buffer::new(&mut self.font_system, metrics.scale(self.scale_factor));
+        let attrs_list = AttrsList::new(&attrs);
         let mut line = if cfg!(windows) {
-            BufferLine::new(
-                line,
-                LineEnding::CrLf,
-                AttrsList::new(attrs),
-                Shaping::Advanced,
-            )
+            BufferLine::new(line, LineEnding::CrLf, attrs_list, Shaping::Advanced)
         } else {
-            BufferLine::new(
-                line,
-                LineEnding::Lf,
-                AttrsList::new(attrs),
-                Shaping::Advanced,
-            )
+            BufferLine::new(line, LineEnding::Lf, attrs_list, Shaping::Advanced)
         };
 
         line.set_align(align);

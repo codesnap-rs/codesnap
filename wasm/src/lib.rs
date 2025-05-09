@@ -13,11 +13,11 @@ extern "C" {
     pub fn alert(s: &str);
 }
 
-pub fn create_snapshot(code: &str) -> SnapshotConfig {
+pub fn create_snapshot(code: &str, language: String) -> SnapshotConfig {
     let code_content = Content::Code(
         CodeBuilder::default()
             .content(code)
-            .language("rust")
+            .language(language)
             .build()
             .unwrap(),
     );
@@ -50,10 +50,10 @@ impl Snapshot {
 }
 
 #[wasm_bindgen]
-pub fn take_snapshot(code: &str) -> Snapshot {
+pub fn take_snapshot(code: &str, language: String) -> Snapshot {
     console_error_panic_hook::set_once();
 
-    let config = create_snapshot(code);
+    let config = create_snapshot(code, language);
 
     Snapshot::new(config)
 }

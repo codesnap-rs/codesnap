@@ -164,6 +164,11 @@ struct CLI {
     #[arg(long, short)]
     language: Option<String>,
 
+    /// Used to detect the language of the code snippet, if you want to set language manually,
+    /// use `--language` or `-l` option.
+    #[arg(long)]
+    file_path: Option<String>,
+
     /// Set watermark for the code snippet
     #[arg(long, short)]
     watermark: Option<String>,

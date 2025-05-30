@@ -92,7 +92,7 @@ struct CLI {
 
     /// Breadcrumbs is a useful and unique feature in CodeSnap, it shows the path of the file
     /// so that users can know where the code snippet comes from.
-    #[arg(long)]
+    #[arg(long, default_value = "false")]
     has_breadcrumbs: Option<bool>,
 
     #[arg(long, default_value = "false")]

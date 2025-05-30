@@ -24,8 +24,11 @@ pub fn create_code(cli: &CLI, code_config: Code) -> anyhow::Result<Content> {
             let parsed_code_snippet = parsed_range.cut_code_snippet(&code_snippet)?;
             let mut code = CodeBuilder::default()
                 .content(parsed_code_snippet)
-                .start_line_number(parsed_range.0 as u32)
                 .build()?;
+
+            code.start_line_number = cli
+                .has_line_number
+                .then_some(cli.start_line_number.unwrap_or(parsed_range.0 as u32));
 
             code.file_path = cli
                 .from_file

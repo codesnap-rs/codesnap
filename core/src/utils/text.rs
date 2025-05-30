@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use cosmic_text::{
-    fontdb::{Database, Source},
-    Align, Attrs, AttrsList, Buffer, BufferLine, Color, Family, FontSystem, LayoutRunIter,
-    LineEnding, Metrics, Shaping, SwashCache,
+    fontdb::Source, Align, Attrs, AttrsList, Buffer, BufferLine, Color, Family, FontSystem,
+    LayoutRunIter, LineEnding, Metrics, Shaping, SwashCache,
 };
 use tiny_skia::{Paint, Pixmap, Rect, Transform};
 

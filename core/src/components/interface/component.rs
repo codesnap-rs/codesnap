@@ -7,31 +7,18 @@ use crate::{
     edges::edge::Edge,
     utils::{text::FontRenderer, theme_provider::ThemeProvider},
 };
-use lazy_static::lazy_static;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
 use tiny_skia::Pixmap;
 
-lazy_static! {
-    // The style parse process is recursive, there may some components style to be reculculated
-    // many times, so we cache the style to avoid reculculate
-    // The key is the component name, which defined in the Component trait
-    static ref STYLE_MAP: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
-}
-
-pub(crate) fn query_style(name: &'static str) -> Option<Style<f32>> {
-    let style_map = STYLE_MAP.lock().unwrap();
-
-    style_map.get(name).cloned()
-}
-
 pub struct ComponentContext {
     pub scale_factor: f32,
     pub take_snapshot_params: Arc<SnapshotConfig>,
     pub theme_provider: ThemeProvider,
     pub font_renderer: Mutex<FontRenderer>,
+    pub style_map: Mutex<HashMap<&'static str, Style<f32>>>,
 }
 
 #[derive(Default, Clone)]
@@ -127,7 +114,7 @@ pub trait Component {
     ) -> Style<f32> {
         let name = self.name();
 
-        if let Some(style) = STYLE_MAP.lock().unwrap().get(name) {
+        if let Some(style) = context.style_map.lock().unwrap().get(name) {
             if name != "STUB_COMPONENT" {
                 return style.clone();
             }
@@ -166,7 +153,12 @@ pub trait Component {
             margin: style.margin,
         };
 
-        STYLE_MAP.lock().unwrap().insert(self.name(), style.clone());
+        context
+            .style_map
+            .lock()
+            .unwrap()
+            .insert(self.name(), style.clone());
+
         style
     }
 

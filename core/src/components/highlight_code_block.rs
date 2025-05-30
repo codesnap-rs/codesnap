@@ -1,9 +1,11 @@
+use std::{collections::HashMap, sync::Mutex};
+
 use crate::{config::HighlightLine, edges::padding::Padding, utils::color::RgbaColor};
 
 use super::{
     editor::code::CODE_LINE_HEIGHT,
     interface::{
-        component::{query_style, Component, ComponentContext, RenderParams},
+        component::{Component, ComponentContext, RenderParams},
         style::ComponentStyle,
     },
 };
@@ -46,6 +48,7 @@ impl Component for HighlightCodeBlock {
                 }
             };
             let (rect, paint) = self.draw_highlight_line(
+                &context.style_map,
                 render_params,
                 parent_style,
                 *start_line_number,
@@ -81,6 +84,7 @@ impl HighlightCodeBlock {
 
     fn draw_highlight_line(
         &self,
+        style_map: &Mutex<HashMap<&'static str, ComponentStyle>>,
         render_params: &RenderParams,
         parent_style: &ComponentStyle,
         start_line_number: u32,
@@ -90,6 +94,7 @@ impl HighlightCodeBlock {
         // If the start_line_number is greater than end_line_number, swap them
         if start_line_number > end_line_number {
             return self.draw_highlight_line(
+                style_map,
                 render_params,
                 parent_style,
                 end_line_number,
@@ -98,7 +103,8 @@ impl HighlightCodeBlock {
             );
         }
 
-        let editor_style = query_style("RectInnerLayer").unwrap();
+        let style_map = style_map.lock().unwrap();
+        let editor_style = style_map.get("RectInnerLayer").unwrap();
         let end_line_number = end_line_number.min(self.code_line_count as u32);
         let mut paint = Paint::default();
         // If the start line number is start at n, the y offset should be (n - 1) * line_height

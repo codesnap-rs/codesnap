@@ -1,11 +1,14 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use crate::{
     components::{
         command_line::{
             command_line_header::CommandLineHeader, command_line_output::CommandLineOutput,
         },
-        interface::component::Component,
+        interface::{component::Component, style::Style},
         layout::{column::Column, row::Row},
     },
     config::{self, CommandLineContent, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
@@ -91,6 +94,10 @@ impl ImageSnapshot {
         window_padding: Padding,
     ) -> Box<dyn Fn(Vec<Box<dyn Component>>) -> anyhow::Result<Pixmap>> {
         Box::new(move |render_content| {
+            // The style parse process is recursive, there may some components style to be reculculated
+            // many times, so we cache the style to avoid reculculate
+            // The key is the component name, which defined in the Component trait
+            let style_map: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
             let editor_background_color = theme_provider.theme_background();
             let font_renderer = Mutex::new(FontRenderer::new(
                 config.scale_factor as f32,
@@ -101,6 +108,7 @@ impl ImageSnapshot {
                 take_snapshot_params: Arc::new(config.clone()),
                 theme_provider: theme_provider.clone(),
                 font_renderer,
+                style_map,
             };
             let background_padding = Padding::from(config.window.margin.clone());
             let border_rgba_color: RgbaColor = config.window.border.color.as_str().into();

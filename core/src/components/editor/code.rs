@@ -11,11 +11,7 @@ use crate::{
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
     config::{self},
-    utils::{
-        code::{calc_wh_with_min_width, prepare_code, CHAR_WIDTH},
-        highlight::Highlight,
-        syntax_provider::SyntaxProvider,
-    },
+    utils::{code::prepare_code, highlight::Highlight, syntax_provider::SyntaxProvider},
 };
 
 const FONT_SIZE: f32 = 12.5;
@@ -34,8 +30,12 @@ impl Component for Code {
         &self.children
     }
 
-    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
-        let (w, h) = calc_wh_with_min_width(&self.value, CHAR_WIDTH, self.metrics.line_height);
+    fn style(&self, context: &ComponentContext) -> RawComponentStyle {
+        let (w, h) = context
+            .font_renderer
+            .lock()
+            .unwrap()
+            .measure_text(self.metrics, &self.value);
 
         Style::default().size(Size::Num(w), Size::Num(h))
     }

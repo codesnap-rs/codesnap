@@ -6,10 +6,7 @@ use crate::{
         render_error,
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
-    utils::{
-        code::{calc_wh_with_min_width, CHAR_WIDTH},
-        color::parse_hex_to_cosmic_color,
-    },
+    utils::color::parse_hex_to_cosmic_color,
 };
 
 pub struct CommandLineHeader {
@@ -28,7 +25,11 @@ impl Component for CommandLineHeader {
             "{} {}",
             context.take_snapshot_params.command_output_config.prompt, self.full_command
         );
-        let (w, h) = calc_wh_with_min_width(parsed_line.as_str(), CHAR_WIDTH, 20.);
+        let (w, h) = context
+            .font_renderer
+            .lock()
+            .unwrap()
+            .measure_text(self.metrics, parsed_line.as_str());
 
         Style::default().size(Size::Num(w), Size::Num(h))
     }

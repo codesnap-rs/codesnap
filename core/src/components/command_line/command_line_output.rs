@@ -7,7 +7,6 @@ use crate::{
         render_error,
         style::{self, RawComponentStyle, Size, Style},
     },
-    utils::code::calc_wh_with_min_width,
 };
 
 pub struct CommandLineOutput {
@@ -21,12 +20,12 @@ impl Component for CommandLineOutput {
         &self.children
     }
 
-    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
-        let (w, h) = calc_wh_with_min_width(
-            &self.ansi_text,
-            self.metrics.font_size / 2.,
-            self.metrics.line_height,
-        );
+    fn style(&self, context: &ComponentContext) -> RawComponentStyle {
+        let (w, h) = context
+            .font_renderer
+            .lock()
+            .unwrap()
+            .measure_text(self.metrics, &self.ansi_text);
 
         Style::default().size(Size::Num(w), Size::Num(h))
     }

@@ -13,6 +13,7 @@ use std::fs::read_to_string;
 use std::path::Path;
 
 use anyhow::bail;
+use anyhow::Context;
 use clap::value_parser;
 use clap::Parser;
 use code::create_code;
@@ -21,7 +22,6 @@ use codesnap::assets::Assets;
 use codesnap::assets::AssetsURL;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
-use codesnap::utils::path::parse_home_variable;
 use config::CodeSnapCLIConfig;
 use egg::say;
 use theme_converter::{parser::Parser as ThemeParser, vscode};
@@ -334,12 +334,20 @@ async fn create_snapshot_config(
         .scale_factor(cli.scale_factor)
         .build()?;
 
-    let mut themes_folders = codesnap.themes_folders;
-    let remote_themes_path = parse_home_variable("~/.config/CodeSnap/remote_themes")?;
-
+    let remote_themes_path = home::home_dir()
+        .context("Unable to get your home dir")?
+        .join(".config")
+        .join("CodeSnap")
+        .join("remote_themes");
     std::fs::create_dir_all(&remote_themes_path)?;
+
+    let remote_themes_path = remote_themes_path
+        .to_str()
+        .context("Invalid remote theme path")?;
+
+    let mut themes_folders = codesnap.themes_folders;
     // The remote themes folder is used to store the themes downloaded from the internet
-    themes_folders.push(remote_themes_path.clone());
+    themes_folders.push(remote_themes_path.to_owned());
 
     codesnap.themes_folders = themes_folders;
     codesnap.fonts_folders = codesnap.fonts_folders;

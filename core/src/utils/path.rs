@@ -2,7 +2,7 @@ use chrono::Local;
 use regex::Regex;
 use std::{
     env::{var, VarError},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 // If users provide a directory path, we will generate a temporary file name
@@ -25,7 +25,7 @@ pub fn parse_home_variable(path: &str) -> Result<String, VarError> {
 
     let home_path = var("HOME")?;
     let regex = Regex::new(r"(~|$HOME)").unwrap();
-    let path = regex.replace_all(&path, home_path);
+    let path = regex.replace_all(path, home_path);
 
     Ok(path.to_string())
 }
@@ -43,4 +43,15 @@ pub fn parse_file_name(path: &str) -> Result<String, VarError> {
     };
 
     Ok(parsed_path)
+}
+
+pub fn get_config_home_path() -> Result<PathBuf, VarError> {
+    let home = parse_home_variable("~")?;
+    let config_home_path = Path::new(&home).join(".config").join("codesnap");
+
+    if !config_home_path.exists() {
+        std::fs::create_dir_all(&config_home_path).unwrap();
+    }
+
+    Ok(config_home_path)
 }

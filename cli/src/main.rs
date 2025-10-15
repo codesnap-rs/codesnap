@@ -8,23 +8,18 @@ mod range;
 mod watermark;
 mod window;
 
-use std::fs;
 use std::fs::read_to_string;
-use std::path::Path;
 
 use anyhow::bail;
 use clap::value_parser;
 use clap::Parser;
 use code::create_code;
 use code_config::create_code_config;
-use codesnap::assets::Assets;
-use codesnap::assets::AssetsURL;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
-use codesnap::utils::path::parse_home_variable;
+use codesnap::themes::parse_code_theme;
 use config::CodeSnapCLIConfig;
 use egg::say;
-use theme_converter::{parser::Parser as ThemeParser, vscode};
 use watermark::create_watermark;
 use window::create_window;
 
@@ -33,7 +28,7 @@ use std::time::Duration;
 
 use indicatif::{ProgressBar, ProgressStyle};
 
-pub const STDIN_CODE_DEFAULT_CHAR: &'static str = "-";
+pub const STDIN_CODE_DEFAULT_CHAR: &str = "-";
 
 /// CodeSnap is a CLI tool to generate beautiful snapshots of your code from terminal.
 #[derive(Parser)]
@@ -275,7 +270,7 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
 }
 
 async fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Result<()> {
-    let snapshot = create_snapshot_config(&cli, codesnap).await?;
+    let snapshot = create_snapshot_config(cli, codesnap).await?;
     let snapshot_type = cli.r#type.clone();
 
     if snapshot_type == "ascii" && cli.output != "clipboard" {
@@ -283,42 +278,11 @@ async fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow:
         return Ok(());
     }
 
-    let message = with_spinner(|| output_snapshot(&cli, &snapshot))?;
+    let message = with_spinner(|| output_snapshot(cli, &snapshot))?;
 
     logger::success(&message);
 
     Ok(())
-}
-
-// If the code theme is URL, download it and return the path
-async fn parse_code_theme(path: &str, code_theme: &str) -> anyhow::Result<String> {
-    let assets_url = AssetsURL::from_url(code_theme);
-
-    match assets_url {
-        Ok(assets_url) => {
-            let assets = Assets::from(path);
-            let assets_store_path_str = assets.download(code_theme).await?;
-            let assets_store_path = Path::new(&assets_store_path_str);
-            let extension = assets_store_path.extension().unwrap_or_default();
-
-            // If the code theme is JSON file, we treat it as a VSCode theme file
-            if extension == "json" {
-                let root = vscode::VSCodeThemeParser::from_config(&assets_store_path_str)
-                    .unwrap()
-                    .parse(&assets_url.name);
-                let path = Path::new(&assets_store_path)
-                    .with_file_name(format!("{}.{}", &assets_url.name, "tmTheme"));
-
-                plist::to_writer_xml(&mut fs::File::create(path).unwrap(), &root)?;
-            }
-
-            Ok(assets_url.name)
-        }
-        Err(_) => {
-            // If the code theme is not a URL, we will use it as a local file
-            Ok(code_theme.to_string())
-        }
-    }
 }
 
 async fn create_snapshot_config(
@@ -327,26 +291,16 @@ async fn create_snapshot_config(
 ) -> anyhow::Result<SnapshotConfig> {
     // Build screenshot config
     let mut codesnap = codesnap
-        .map_code_config(|code_config| create_code_config(&cli, code_config))?
-        .map_code(|raw_code| create_code(&cli, raw_code))?
-        .map_watermark(|watermark| create_watermark(&cli, watermark))?
-        .map_window(|window| create_window(&cli, window))?
+        .map_code_config(|code_config| create_code_config(cli, code_config))?
+        .map_code(|raw_code| create_code(cli, raw_code))?
+        .map_watermark(|watermark| create_watermark(cli, watermark))?
+        .map_window(|window| create_window(cli, window))?
         .scale_factor(cli.scale_factor)
         .build()?;
 
-    let mut themes_folders = codesnap.themes_folders;
-    let remote_themes_path = parse_home_variable("~/.config/CodeSnap/remote_themes")?;
-
-    std::fs::create_dir_all(&remote_themes_path)?;
-    // The remote themes folder is used to store the themes downloaded from the internet
-    themes_folders.push(remote_themes_path.clone());
-
-    codesnap.themes_folders = themes_folders;
-    codesnap.fonts_folders = codesnap.fonts_folders;
     codesnap.line_number_color = cli.line_number_color.clone();
     codesnap.title = cli.title.clone();
     codesnap.theme = parse_code_theme(
-        &remote_themes_path,
         cli.code_theme
             .clone()
             .unwrap_or(codesnap.theme.clone())

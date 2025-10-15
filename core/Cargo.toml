@@ -32,6 +32,8 @@ reqwest = "0.12.15"
 mime_guess = "2.0.5"
 url = "2.5.4"
 hyperpolyglot_fork = { version = "0.1.7", optional = true }
+theme-converter = "0.1.2"
+plist = "1.8.0"
 
 [features]
 default = []

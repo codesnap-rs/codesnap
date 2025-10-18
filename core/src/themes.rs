@@ -52,7 +52,7 @@ pub async fn parse_remote_code_theme(path: &str, code_theme: &str) -> anyhow::Re
 }
 
 pub async fn parse_code_theme(code_theme: &str) -> anyhow::Result<String> {
-    let remote_theme_folder_path = get_config_home_path()?.join("remote_themes");
+    let remote_theme_folder_path = get_config_home_path().join("remote_themes");
 
     if !remote_theme_folder_path.exists() {
         fs::create_dir_all(&remote_theme_folder_path)?;

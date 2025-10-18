@@ -18,20 +18,16 @@ fn create_temp_file_name() -> String {
     format!("CodeSnap_{}", formatted_time)
 }
 
-pub fn parse_home_variable(path: &str) -> Result<String, VarError> {
-    if cfg!(windows) {
-        return Ok(path.to_string());
-    }
-
-    let home_path = var("HOME")?;
+pub fn parse_home_variable(path: &str) -> String {
+    let home_path = home::home_dir().unwrap().to_string_lossy().to_string();
     let regex = Regex::new(r"(~|$HOME)").unwrap();
     let path = regex.replace_all(path, home_path);
 
-    Ok(path.to_string())
+    path.to_string()
 }
 
 pub fn parse_file_name(path: &str) -> Result<String, VarError> {
-    let path_str = parse_home_variable(path)?;
+    let path_str = parse_home_variable(path);
     let path = Path::new(&path_str);
     let parsed_path = if path.is_dir() {
         path.join(create_temp_file_name())
@@ -45,13 +41,13 @@ pub fn parse_file_name(path: &str) -> Result<String, VarError> {
     Ok(parsed_path)
 }
 
-pub fn get_config_home_path() -> Result<PathBuf, VarError> {
-    let home = parse_home_variable("~")?;
+pub fn get_config_home_path() -> PathBuf {
+    let home = parse_home_variable("~");
     let config_home_path = Path::new(&home).join(".config").join("codesnap");
 
     if !config_home_path.exists() {
         std::fs::create_dir_all(&config_home_path).unwrap();
     }
 
-    Ok(config_home_path)
+    config_home_path
 }

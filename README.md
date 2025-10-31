@@ -213,6 +213,7 @@ If you are using CodeSnap on wl-clipboard, you can refer [wl-clip-persist](https
 - [codesnap](https://github.com/mistricky/CodeSnap/tree/main/core)
 - [codesnap-cli](https://github.com/mistricky/CodeSnap/tree/main/cli)
 - [codesnap.nvim](https://github.com/mistricky/codesnap.nvim)
+- [codesnap.el](https://github.com/erickisos/codesnap.el)
 - codesnap.idea (Planning)
 - codesnap.vscode (Planning)
 - codesnap.zed (Planning)

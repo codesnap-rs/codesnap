@@ -50,7 +50,7 @@ jobs:
 
       - name: Build changelog for main repository
         id: build_changelog
-        uses: mikepenz/release-changelog-builder-action@v5
+        uses: mikepenz/release-changelog-builder-action@v6
         with:
           token: ${{ secrets.PAT }}
           toTag: ${{ steps.tag_version.outputs.new_tag }}

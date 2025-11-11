@@ -1,7 +1,7 @@
 use std::path::MAIN_SEPARATOR_STR;
 
 use cosmic_text::{Attrs, Family, Metrics};
-use regex::Regex;
+use regex::{escape, Regex};
 
 use crate::{
     edges::margin::Margin,
@@ -42,15 +42,13 @@ impl Component for Breadcrumbs {
 
         self.path
             .as_ref()
-            .and_then(|path| {
-                let (w, h) = calc_wh_with_min_width(&path, 8., LINE_HEIGHT);
+            .map(|path| {
+                let (w, h) = calc_wh_with_min_width(path, 8., LINE_HEIGHT);
 
-                return Some(
-                    style
-                        .clone()
-                        .size(Size::Num(w), Size::Num(h))
-                        .margin(Margin::default()),
-                );
+                style
+                    .clone()
+                    .size(Size::Num(w), Size::Num(h))
+                    .margin(Margin::default())
             })
             .unwrap_or(style)
     }
@@ -103,7 +101,7 @@ impl Breadcrumbs {
 }
 
 fn parse_separator(path_str: &str, separator: &str) -> String {
-    Regex::new(MAIN_SEPARATOR_STR)
+    Regex::new(&escape(MAIN_SEPARATOR_STR))
         .unwrap()
         .replace_all(path_str, separator)
         .to_string()

@@ -433,6 +433,7 @@
         "border",
         "mac_window_bar",
         "margin",
+        "radius",
         "shadow",
         "title_config"
       ],
@@ -445,6 +446,10 @@
         },
         "margin": {
           "$ref": "#/definitions/Margin"
+        },
+        "radius": {
+          "type": "number",
+          "format": "float"
         },
         "shadow": {
           "$ref": "#/definitions/Shadow"

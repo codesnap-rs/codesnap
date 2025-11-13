@@ -11,6 +11,6 @@ repository = "https://github.com/mistricky/CodeSnap"
 crate-type = ["cdylib"]
 
 [dependencies]
-codesnap = { version = "0.12.11", path = "../core" }
+codesnap = { version = "0.13.0", path = "../core" }
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.100"

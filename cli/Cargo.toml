@@ -15,7 +15,7 @@ path = "src/main.rs"
 ansi_term = "0.12.1"
 anyhow = "1.0.91"
 clap = { version = "4.5.21", features = ["derive"] }
-codesnap = { path = "../core", version = "0.13.0", features = ["full"] }
+codesnap = { path = "../core", version = "0.13.1", features = ["full"] }
 ferris-says = "0.3.2"
 home = "0.5.9"
 indicatif = "0.17.9"

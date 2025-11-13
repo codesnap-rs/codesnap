@@ -3,7 +3,7 @@ resolver = "2"
 members = ["cli", "core", "wasm", "xtask"]
 
 [workspace.package]
-version = "0.13.0"
+version = "0.13.1"
 edition = "2021"
 authors = ["mist.zzh@gmail.com"]
 

@@ -4,6 +4,7 @@ use tiny_skia::Color;
 const HEX_COLOR_LENGTH: usize = 7;
 const HEX_COLOR_WITH_ALPHA_LENGTH: usize = 9;
 
+#[derive(Clone)]
 pub struct RgbaColor(Color);
 
 pub fn is_valid_hex_color(color: &str) -> bool {

@@ -15,31 +15,12 @@ use codesnap::{
 
 use crate::{highlight::HighlightLineRange, range::Range, CLI, STDIN_CODE_DEFAULT_CHAR};
 
-pub fn create_code(cli: &CLI, code_config: Code) -> anyhow::Result<Content> {
+pub fn create_content(cli: &CLI, default_content: Code) -> anyhow::Result<Content> {
     let code = match cli.execute[..] {
-        [] => {
-            let range = Range::from_opt_string(cli.range.clone())?;
-            let code_snippet = get_code_snippet(cli)?;
-            let parsed_range = range.parse_range(&code_snippet)?;
-            let parsed_code_snippet = parsed_range.cut_code_snippet(&code_snippet)?;
-            let mut code = CodeBuilder::default()
-                .content(parsed_code_snippet)
-                .build()?;
-
-            code.start_line_number = cli
-                .has_line_number
-                .then_some(cli.start_line_number.unwrap_or(parsed_range.0 as u32));
-
-            code.file_path = cli
-                .from_file
-                .clone()
-                .or(cli.file_path.clone())
-                .or(code_config.file_path);
-            code.language = cli.language.clone().or(code_config.language);
-            code.highlight_lines = create_highlight_lines(&cli, parsed_range, &code_snippet)?;
-
-            Content::Code(code)
-        }
+        [] => match &cli.from_image {
+            Some(image) => create_image(image),
+            None => create_code(cli, default_content),
+        }?,
         _ => {
             let command_content = cli
                 .execute
@@ -132,17 +113,7 @@ fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
     if let Some(ref code) = cli.from_code {
         // Read code from pipe if the code option is "-"
         return Ok(if code == STDIN_CODE_DEFAULT_CHAR {
-            // If input come from terminal, print help and exit
-            if stdin().is_terminal() {
-                CLI::command().print_help()?;
-                process::exit(2);
-            }
-
-            let mut content = String::new();
-
-            BufReader::new(stdin().lock()).read_to_string(&mut content)?;
-
-            content
+            String::from_utf8(read_from_stdin()?)?
         } else {
             code.clone()
         });
@@ -155,4 +126,52 @@ fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
     }
 
     bail!("No code snippet provided");
+}
+
+fn create_code(cli: &CLI, default_content: Code) -> anyhow::Result<Content> {
+    let range = Range::from_opt_string(cli.range.clone())?;
+    let code_snippet = get_code_snippet(cli)?;
+    let parsed_range = range.parse_range(&code_snippet)?;
+    let parsed_code_snippet = parsed_range.cut_code_snippet(&code_snippet)?;
+    let mut code = CodeBuilder::default()
+        .content(parsed_code_snippet)
+        .build()?;
+
+    code.start_line_number = cli
+        .has_line_number
+        .then_some(cli.start_line_number.unwrap_or(parsed_range.0 as u32));
+
+    code.file_path = cli
+        .from_file
+        .clone()
+        .or(cli.file_path.clone())
+        .or(default_content.file_path);
+    code.language = cli.language.clone().or(default_content.language);
+    code.highlight_lines = create_highlight_lines(cli, parsed_range, &code_snippet)?;
+
+    Ok(Content::Code(code))
+}
+
+fn create_image(image: &str) -> anyhow::Result<Content> {
+    let image_data = if image == STDIN_CODE_DEFAULT_CHAR {
+        read_from_stdin()?
+    } else {
+        image.as_bytes().to_owned()
+    };
+
+    Ok(Content::Image(image_data))
+}
+
+fn read_from_stdin() -> anyhow::Result<Vec<u8>> {
+    let mut content = vec![];
+
+    // If input come from terminal, print help and exit
+    if stdin().is_terminal() {
+        CLI::command().print_help()?;
+        process::exit(2);
+    }
+
+    BufReader::new(stdin().lock()).read_to_end(&mut content)?;
+
+    Ok(content)
 }

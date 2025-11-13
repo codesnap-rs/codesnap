@@ -144,55 +144,61 @@ Or if you are using CLI tool, CodeSnap will generate a default config file for y
 ```jsonc
 // Both "CaskaydiaCove Nerd Font" and "Pacifico" is pre-installed in CodeSnap, you can use them out of the box
 {
-  "theme": "candy",
-  "window": {
-    "mac_window_bar": true,
-    "shadow": {
-      "radius": 20,
-      "color": "#00000040"
-    },
-    "margin": {
-      "x": 82,
-      "y": 82
-    },
-    "border": {
-      "width": 1,
-      "color": "#ffffff30"
-    }
-  },
-  "code_config": {
-    "font_family": "CaskaydiaCove Nerd Font",
-    "breadcrumbs": {
-      "separator": "/",
-      "color": "#80848b",
-      "font_family": "CaskaydiaCove Nerd Font"
-    }
-  },
-  "watermark": {
-    "content": "CodeSnap",
-    "font_family": "Pacifico",
-    "color": "#ffffff"
-  },
-  "background": {
-    "start": {
-      "x": 0,
-      "y": 0
-    },
-    "end": {
-      "x": "max",
-      "y": 0
-    },
-    "stops": [
-      {
-        "position": 0,
-        "color": "#6bcba5"
+    "theme": "candy",
+    "window": {
+      "mac_window_bar": true,
+      "shadow": {
+        "radius": 20,
+        "color": "#00000040"
       },
-      {
-        "position": 1,
-        "color": "#caf4c2"
+      "margin": {
+        "x": 82,
+        "y": 82
+      },
+      "border": {
+        "width": 1,
+        "color": "#ffffff30"
+      },
+      "title_config": {
+        "color": "#ffffff",
+        "font_family": "Pacifico"
+      },
+      "radius": 12
+    },
+    "code_config": {
+      "font_family": "CaskaydiaCove Nerd Font",
+      "breadcrumbs": {
+        "enable": false,
+        "separator": "/",
+        "color": "#80848b",
+        "font_family": "CaskaydiaCove Nerd Font"
       }
-    ]
-  }
+    },
+    "watermark": {
+      "content": "CodeSnap",
+      "font_family": "Pacifico",
+      "color": "#ffffff"
+    },
+    "background": {
+      "start": {
+        "x": 0,
+        "y": 0
+      },
+      "end": {
+        "x": "max",
+        "y": 0
+      },
+      "stops": [
+        {
+          "position": 0,
+          "color": "#6bcba5"
+        },
+        {
+          "position": 1,
+          "color": "#caf4c2"
+        }
+      ]
+    }
 }
 ```
 

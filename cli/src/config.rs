@@ -24,7 +24,7 @@ impl CodeSnapCLIConfig {
 // Get CodeSnap config, create if the config does not exists
 pub fn get_config_content() -> anyhow::Result<String> {
     let home_dir = home::home_dir().context("Unable to get your home dir")?;
-    let codesnap_home_path = home_dir.join(".config").join("CodeSnap");
+    let codesnap_home_path = home_dir.join(".config").join("codesnap");
     let config_path = codesnap_home_path.join("config.json");
     let is_config_exists = config_path.try_exists()?;
 

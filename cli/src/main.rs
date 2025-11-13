@@ -9,6 +9,8 @@ mod watermark;
 mod window;
 
 use std::fs::read_to_string;
+use std::io;
+use std::io::Write;
 
 use anyhow::bail;
 use clap::value_parser;
@@ -16,8 +18,8 @@ use clap::Parser;
 use code::create_content;
 use code_config::create_code_config;
 use codesnap::config::CodeSnap;
-use codesnap::config::Content;
 use codesnap::config::SnapshotConfig;
+use codesnap::snapshot::snapshot_data::SnapshotData;
 use codesnap::themes::parse_code_theme;
 use config::CodeSnapCLIConfig;
 use egg::say;
@@ -62,6 +64,9 @@ struct CLI {
     /// to the directory.
     #[arg(short, long)]
     output: String,
+
+    #[arg(long, default_value = "false")]
+    silent: bool,
 
     /// Executing a command and taking the output as the code snippet.
     #[arg(long, short, num_args=1..)]
@@ -235,6 +240,25 @@ struct CLI {
 }
 
 fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<String> {
+    if cli.output == "raw" {
+        // Output to stdout
+        match snapshot.create_snapshot()?.png_data()? {
+            SnapshotData::Image {
+                data,
+                width: _,
+                height: _,
+            } => {
+                io::stdout().write_all(&data)?;
+                io::stdout().flush()?;
+            }
+            SnapshotData::Text(content) => {
+                print!("{content}");
+            }
+        };
+
+        return Ok("Output to stdout".to_string());
+    }
+
     // Save snapshot to clipboard
     if cli.output == "clipboard" {
         match cli.r#type.as_str() {
@@ -282,9 +306,12 @@ async fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow:
         return Ok(());
     }
 
-    let message = with_spinner(|| output_snapshot(cli, &snapshot))?;
-
-    logger::success(&message);
+    if !cli.silent {
+        let message = with_spinner(|| output_snapshot(cli, &snapshot))?;
+        logger::success(&message)
+    } else {
+        output_snapshot(cli, &snapshot)?;
+    }
 
     Ok(())
 }

@@ -44,11 +44,11 @@ pub struct ImageSnapshot {
 
 impl ImageSnapshot {
     pub fn raw_data(&self) -> Result<SnapshotData, anyhow::Error> {
-        Ok(SnapshotData::from_pixmap(&self.pixmap, false)?)
+        SnapshotData::from_pixmap(&self.pixmap, false)
     }
 
     pub fn png_data(&self) -> Result<SnapshotData, anyhow::Error> {
-        Ok(SnapshotData::from_pixmap(&self.pixmap, true)?)
+        SnapshotData::from_pixmap(&self.pixmap, true)
     }
 
     pub fn svg_data(&self) -> Result<SnapshotData, anyhow::Error> {
@@ -202,7 +202,7 @@ impl ImageSnapshot {
                 theme_provider_cloned.clone(),
                 Box::new(
                     Rect::create_with_border(
-                        12.,
+                        config_cloned.window.radius,
                         editor_background_color.into(),
                         DEFAULT_WINDOW_MIN_WIDTH,
                         window_padding_cloned,
@@ -232,12 +232,15 @@ impl ImageSnapshot {
                 theme_provider.clone(),
                 Box::new(
                     Rect::new(
-                        12.,
-                        Color::from_rgba8(255, 255, 255, 255),
+                        config.window.radius,
+                        Color::from_rgba8(255, 255, 255, 0),
                         None,
                         Padding::default(),
                         "ImageContainer",
-                        vec![Box::new(Image::new(image_data.to_owned())?)],
+                        vec![Box::new(Image::new(
+                            config.window.radius,
+                            image_data.to_owned(),
+                        )?)],
                     )
                     .shadow(
                         0.,

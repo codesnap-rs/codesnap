@@ -17,7 +17,8 @@
     "title_config": {
       "color": "#ffffff",
       "font_family": "Pacifico"
-    }
+    },
+    "radius": 12
   },
   "code_config": {
     "font_family": "CaskaydiaCove Nerd Font",

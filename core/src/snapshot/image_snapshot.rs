@@ -8,6 +8,7 @@ use crate::{
         command_line::{
             command_line_header::CommandLineHeader, command_line_output::CommandLineOutput,
         },
+        image::Image,
         interface::{component::Component, style::Style},
         layout::{column::Column, row::Row},
     },
@@ -91,74 +92,42 @@ impl ImageSnapshot {
     pub fn create_drawer_with_frame(
         config: SnapshotConfig,
         theme_provider: ThemeProvider,
-        window_padding: Padding,
-    ) -> Box<dyn Fn(Vec<Box<dyn Component>>) -> anyhow::Result<Pixmap>> {
-        Box::new(move |render_content| {
-            // The style parse process is recursive, there may some components style to be reculculated
-            // many times, so we cache the style to avoid reculculate
-            // The key is the component name, which defined in the Component trait
-            let style_map: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
-            let editor_background_color = theme_provider.theme_background();
-            let font_renderer = Mutex::new(FontRenderer::new(
-                config.scale_factor as f32,
-                config.fonts_folders.clone(),
-            ));
-            let context = ComponentContext {
-                scale_factor: config.scale_factor as f32,
-                take_snapshot_params: Arc::new(config.clone()),
-                theme_provider: theme_provider.clone(),
-                font_renderer,
-                style_map,
-            };
-            let background_padding = Padding::from(config.window.margin.clone());
-            let border_rgba_color: RgbaColor = config.window.border.color.as_str().into();
+        render_content: Box<dyn Component>,
+    ) -> anyhow::Result<Pixmap> {
+        // The style parse process is recursive, there may some components style to be reculculated
+        // many times, so we cache the style to avoid reculculate
+        // The key is the component name, which defined in the Component trait
+        let style_map: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
 
-            // If vertical background padding is less than 82., should hidden watermark component
-            // If watermark text is equal to "", the watermark component is hidden
-            let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
-                config.watermark.clone()
-            } else {
-                None
-            };
+        let font_renderer = Mutex::new(FontRenderer::new(
+            config.scale_factor as f32,
+            config.fonts_folders.clone(),
+        ));
+        let context = ComponentContext {
+            scale_factor: config.scale_factor as f32,
+            take_snapshot_params: Arc::new(config.clone()),
+            theme_provider: theme_provider.clone(),
+            font_renderer,
+            style_map,
+        };
+        let background_padding = Padding::from(config.window.margin.clone());
 
-            let mut parsed_render_content: Vec<Box<dyn Component>> =
-                vec![Box::new(Row::from_children(vec![
-                    Box::new(MacTitleBar::new(config.window.mac_window_bar)),
-                    Box::new(Title::from_content(config.title.clone())),
-                ]))];
+        // If vertical background padding is less than 82., should hidden watermark component
+        // If watermark text is equal to "", the watermark component is hidden
+        let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
+            config.watermark.clone()
+        } else {
+            None
+        };
 
-            parsed_render_content.extend(render_content);
+        // Draw the image snapshot frame template
+        let pixmap = Container::from_children(vec![Box::new(Background::new(
+            background_padding,
+            vec![render_content, Box::new(Watermark::new(watermark))],
+        ))])
+        .draw_root(&context)?;
 
-            let shadow_color: RgbaColor = config.window.shadow.color.as_str().into();
-
-            // Draw the image snapshot frame template
-            let pixmap = Container::from_children(vec![Box::new(Background::new(
-                background_padding,
-                vec![
-                    Box::new(
-                        Rect::create_with_border(
-                            12.,
-                            editor_background_color.into(),
-                            DEFAULT_WINDOW_MIN_WIDTH,
-                            window_padding.clone(),
-                            config.window.border.width,
-                            border_rgba_color.into(),
-                            parsed_render_content,
-                        )
-                        .shadow(
-                            0.,
-                            21.,
-                            config.window.shadow.radius,
-                            Color::from(shadow_color),
-                        ),
-                    ),
-                    Box::new(Watermark::new(watermark)),
-                ],
-            ))])
-            .draw_root(&context)?;
-
-            Ok(pixmap)
-        })
+        Ok(pixmap)
     }
 
     pub fn draw_code_content(
@@ -181,6 +150,10 @@ impl ImageSnapshot {
 
         Ok(view)
     }
+
+    // pub fn draw_image_content() -> {
+    //
+    // }
 
     pub fn command_line_content(
         command_line_content: Vec<CommandLineContent>,
@@ -207,20 +180,74 @@ impl ImageSnapshot {
             },
             ..Padding::from_value(14.)
         };
+        let editor_background_color = theme_provider.theme_background();
+        let border_rgba_color: RgbaColor = config.window.border.color.as_str().into();
+        let shadow_color: RgbaColor = config.window.shadow.color.as_str().into();
+        let config_cloned = config.clone();
+        let window_padding_cloned = window_padding.clone();
+        let theme_provider_cloned = theme_provider.clone();
+        let shadow_color_cloned = shadow_color.clone();
 
-        let drawer = Self::create_drawer_with_frame(
-            config.clone(),
-            theme_provider.clone(),
-            window_padding.clone(),
-        );
-        let pixmap = match config.content {
+        let draw_with_code_window = move |render_content| {
+            let mut parsed_render_content: Vec<Box<dyn Component>> =
+                vec![Box::new(Row::from_children(vec![
+                    Box::new(MacTitleBar::new(config.window.mac_window_bar)),
+                    Box::new(Title::from_content(config_cloned.title.clone())),
+                ]))];
+
+            parsed_render_content.extend(render_content);
+
+            Self::create_drawer_with_frame(
+                config_cloned.clone(),
+                theme_provider_cloned.clone(),
+                Box::new(
+                    Rect::create_with_border(
+                        12.,
+                        editor_background_color.into(),
+                        DEFAULT_WINDOW_MIN_WIDTH,
+                        window_padding_cloned,
+                        config.window.border.width,
+                        border_rgba_color.into(),
+                        parsed_render_content,
+                    )
+                    .shadow(
+                        0.,
+                        21.,
+                        config.window.shadow.radius,
+                        Color::from(shadow_color_cloned),
+                    ),
+                ),
+            )
+        };
+
+        let pixmap = match &config.content {
             crate::config::Content::Code(code) => {
-                drawer(Self::draw_code_content(&window_padding, code)?)
+                draw_with_code_window(Self::draw_code_content(&window_padding, code.clone())?)?
             }
             crate::config::Content::CommandOutput(command_line_content) => {
-                drawer(Self::command_line_content(command_line_content))
+                draw_with_code_window(Self::command_line_content(command_line_content.clone()))?
             }
-        }?;
+            crate::config::Content::Image(image_data) => Self::create_drawer_with_frame(
+                config.clone(),
+                theme_provider.clone(),
+                Box::new(
+                    Rect::new(
+                        12.,
+                        Color::from_rgba8(255, 255, 255, 255),
+                        None,
+                        Padding::default(),
+                        "ImageContainer",
+                        vec![Box::new(Image::new(image_data.to_owned())?)],
+                    )
+                    .shadow(
+                        0.,
+                        21.,
+                        config.window.shadow.radius,
+                        Color::from(shadow_color),
+                    ),
+                ),
+            )?,
+        };
 
         Ok(Self { pixmap })
     }

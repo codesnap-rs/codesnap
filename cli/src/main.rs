@@ -13,9 +13,10 @@ use std::fs::read_to_string;
 use anyhow::bail;
 use clap::value_parser;
 use clap::Parser;
-use code::create_code;
+use code::create_content;
 use code_config::create_code_config;
 use codesnap::config::CodeSnap;
+use codesnap::config::Content;
 use codesnap::config::SnapshotConfig;
 use codesnap::themes::parse_code_theme;
 use config::CodeSnapCLIConfig;
@@ -43,6 +44,9 @@ struct CLI {
     /// Code snippet for snapshot
     #[arg(short = 'c', long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..=1, value_parser=value_parser!(String), value_name="Code")]
     from_code: Option<String>,
+
+    #[arg(short = 'i', long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..=1, value_parser=value_parser!(String), value_name="Image")]
+    from_image: Option<String>,
 
     #[arg(long)]
     from_clipboard: bool,
@@ -292,7 +296,7 @@ async fn create_snapshot_config(
     // Build screenshot config
     let mut codesnap = codesnap
         .map_code_config(|code_config| create_code_config(cli, code_config))?
-        .map_code(|raw_code| create_code(cli, raw_code))?
+        .map_content(|default_content| create_content(cli, default_content))?
         .map_watermark(|watermark| create_watermark(cli, watermark))?
         .map_window(|window| create_window(cli, window))?
         .scale_factor(cli.scale_factor)

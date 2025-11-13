@@ -248,6 +248,7 @@ pub struct CommandOutputConfig {
 pub enum Content {
     Code(Code),
     CommandOutput(Vec<CommandLineContent>),
+    Image(Vec<u8>),
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug, JsonSchema, Default)]
@@ -398,7 +399,7 @@ impl CodeSnap {
         Ok(self)
     }
 
-    pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
+    pub fn map_content<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where
         F: Fn(Code) -> anyhow::Result<Content>,
     {

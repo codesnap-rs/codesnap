@@ -9,4 +9,7 @@ pub enum RenderError {
 
     #[error("No such file {0}")]
     NoSuchFile(String),
+
+    #[error("Failed to decode image data")]
+    FailedDecodeImageData,
 }

@@ -31,11 +31,12 @@ impl Component for Watermark {
         let attrs = Attrs::new()
             .color(parse_hex_to_cosmic_color(&config.color))
             .family(Family::Name(&config.font_family));
+        let font_size = (pixmap.width() as f32 * 0.11).clamp(20., 30.);
 
         context.font_renderer.lock().unwrap().draw_line(
             0.,
             render_params.y,
-            Metrics::new(20., 20.),
+            Metrics::new(font_size, font_size),
             &config.content,
             attrs,
             Some(Align::Center),

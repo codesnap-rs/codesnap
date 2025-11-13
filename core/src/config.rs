@@ -174,6 +174,9 @@ pub struct Window {
 
     #[builder(default = ShadowBuilder::default().build().unwrap())]
     pub shadow: Shadow,
+
+    #[builder(default = 12.0)]
+    pub radius: f32,
 }
 
 impl WindowBuilder {
@@ -184,6 +187,7 @@ impl WindowBuilder {
             border: Some(window.border),
             mac_window_bar: Some(window.mac_window_bar),
             shadow: Some(window.shadow),
+            radius: Some(window.radius),
         }
     }
 }

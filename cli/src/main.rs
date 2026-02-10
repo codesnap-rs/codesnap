@@ -173,6 +173,10 @@ struct CLI {
     #[arg(long)]
     file_path: Option<String>,
 
+    /// Disables the rendering of the watermark
+    #[arg(long, default_value_t = false)]
+    disable_watermark: bool,
+
     /// Set watermark for the code snippet
     #[arg(long, short)]
     watermark: Option<String>,

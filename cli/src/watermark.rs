@@ -10,6 +10,10 @@ pub fn create_watermark(
         return Ok(None);
     }
 
+    if cli.disable_watermark == true {
+        return Ok(None);
+    }
+
     let watermark = cli
         .watermark
         .clone()

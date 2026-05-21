@@ -1,5 +1,6 @@
 #[cfg(feature = "auto-detect")]
 use hyperpolyglot_fork::detectors::classify;
+use std::path::Path;
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 
 use crate::components::interface::render_error::RenderError;
@@ -17,13 +18,20 @@ impl SyntaxProvider {
     ) -> Result<SyntaxReference, RenderError> {
         let syntax = match &language {
             Some(language) => self.syntax_set.find_syntax_by_token(&language),
-            None => match &code_file_path {
-                Some(file_path) => self
-                    .syntax_set
-                    .find_syntax_for_file(&file_path)
-                    .map_err(|_| RenderError::NoSuchFile(file_path.clone()))?,
-                None => self.syntax_set.find_syntax_by_first_line(code),
-            },
+            None => {
+                let by_path = code_file_path.as_deref().and_then(|p| {
+                    let path = Path::new(p);
+                    path.file_name()
+                        .and_then(|n| n.to_str())
+                        .and_then(|n| self.syntax_set.find_syntax_by_extension(n))
+                        .or_else(|| {
+                            path.extension()
+                                .and_then(|e| e.to_str())
+                                .and_then(|e| self.syntax_set.find_syntax_by_extension(e))
+                        })
+                });
+                by_path.or_else(|| self.syntax_set.find_syntax_by_first_line(code))
+            }
         };
 
         #[cfg(feature = "auto-detect")]

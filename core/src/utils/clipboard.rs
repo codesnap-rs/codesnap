@@ -2,7 +2,10 @@ use arboard::ImageData;
 #[cfg(target_os = "linux")]
 use arboard::SetExtLinux;
 #[cfg(target_os = "linux")]
-use std::thread;
+use std::time::{Duration, Instant};
+
+#[cfg(target_os = "linux")]
+const LINUX_CLIPBOARD_WAIT_DURATION: Duration = Duration::from_secs(1);
 
 pub struct Clipboard {
     aboard_clipboard: arboard::Clipboard,
@@ -19,11 +22,10 @@ impl Clipboard {
 
     pub fn set_image(&mut self, image_data: ImageData) -> Result<()> {
         #[cfg(target_os = "linux")]
-        thread::scope(|s| -> Result<()> {
-            s.spawn(|| -> Result<()> { self.aboard_clipboard.set().wait().image(image_data) })
-                .join()
-                .unwrap()
-        })?;
+        self.aboard_clipboard
+            .set()
+            .wait_until(Instant::now() + LINUX_CLIPBOARD_WAIT_DURATION)
+            .image(image_data)?;
 
         #[cfg(not(target_os = "linux"))]
         self.aboard_clipboard.set_image(image_data)?;
@@ -33,11 +35,10 @@ impl Clipboard {
 
     pub fn set_text(&mut self, text: &str) -> Result<()> {
         #[cfg(target_os = "linux")]
-        thread::scope(|s| -> Result<()> {
-            s.spawn(move || -> Result<()> { self.aboard_clipboard.set().wait().text(text) })
-                .join()
-                .unwrap()
-        })?;
+        self.aboard_clipboard
+            .set()
+            .wait_until(Instant::now() + LINUX_CLIPBOARD_WAIT_DURATION)
+            .text(text)?;
 
         #[cfg(not(target_os = "linux"))]
         self.aboard_clipboard.set_text(text)?;

@@ -11,7 +11,6 @@ mod window;
 use std::fs::read_to_string;
 use std::io;
 use std::io::Write;
-use std::process::{Command, Stdio};
 
 use anyhow::bail;
 use clap::value_parser;
@@ -271,16 +270,7 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
                 snapshot.create_ascii_snapshot()?.raw_data()?.copy()?;
             }
             "image" => {
-                let image_snapshot = snapshot.create_snapshot()?;
-
-                let png_data = match image_snapshot.png_data()? {
-                    SnapshotData::Image { data, .. } => data,
-                    SnapshotData::Text(_) => bail!("Invalid image snapshot data"),
-                };
-
-                if !try_copy_png_to_wayland_clipboard(&png_data)? {
-                    image_snapshot.raw_data()?.copy()?;
-                }
+                snapshot.create_snapshot()?.raw_data()?.copy()?;
             }
             _ => {
                 bail!("Invalid snapshot type");
@@ -309,32 +299,6 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
     };
 
     Ok(format!("Snapshot saved to {} successful!", cli.output))
-}
-
-fn try_copy_png_to_wayland_clipboard(png_data: &[u8]) -> anyhow::Result<bool> {
-    if !cfg!(target_os = "linux") || std::env::var_os("WAYLAND_DISPLAY").is_none() {
-        return Ok(false);
-    }
-
-    let mut child = match Command::new("wl-copy")
-        .args(["--type", "image/png"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-    {
-        Ok(child) => child,
-        Err(_) => return Ok(false),
-    };
-
-    if let Some(mut stdin) = child.stdin.take() {
-        if stdin.write_all(png_data).is_err() {
-            let _ = child.wait();
-            return Ok(false);
-        }
-    }
-
-    Ok(child.wait()?.success())
 }
 
 async fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Result<()> {

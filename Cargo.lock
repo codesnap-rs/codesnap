@@ -122,9 +122,9 @@ checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 
 [[package]]
 name = "arboard"
-version = "3.5.0"
+version = "3.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1df21f715862ede32a0c525ce2ca4d52626bb0007f8c18b87a384503ac33e70"
+checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
 dependencies = [
  "clipboard-win",
  "image",
@@ -136,7 +136,7 @@ dependencies = [
  "objc2-foundation",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
  "wl-clipboard-rs",
  "x11rb",
 ]
@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap"
-version = "0.13.2"
+version = "0.13.3"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-cli"
-version = "0.13.2"
+version = "0.13.3"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -461,7 +461,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-wasm"
-version = "0.13.2"
+version = "0.13.3"
 dependencies = [
  "codesnap",
  "console_error_panic_hook",
@@ -3608,7 +3608,7 @@ checksum = "ec107c4503ea0b4a98ef47356329af139c0a4f7750e621cf2973cd3385ebcb3d"
 
 [[package]]
 name = "xtask"
-version = "0.13.2"
+version = "0.13.3"
 dependencies = [
  "clap 4.5.37",
  "codesnap",

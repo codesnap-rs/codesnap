@@ -1,3 +1,4 @@
+use crate::rendering::Scene;
 use cosmic_text::{Attrs, Family, Metrics, Weight};
 
 use crate::{
@@ -36,7 +37,7 @@ impl Component for CommandLineHeader {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         _style: &ComponentStyle,
@@ -72,13 +73,7 @@ impl Component for CommandLineHeader {
             (args.as_str(), create_attrs()),
         ];
 
-        context.font_renderer.lock().unwrap().draw_text(
-            render_params.x,
-            render_params.y,
-            self.metrics,
-            spans,
-            pixmap,
-        );
+        scene.draw_text(render_params.x, render_params.y, self.metrics, spans);
 
         Ok(())
     }

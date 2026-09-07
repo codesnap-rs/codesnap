@@ -1,4 +1,6 @@
+use crate::rendering::Scene;
 use anyhow::anyhow;
+use std::sync::Arc;
 use tiny_skia::{FillRule, FilterQuality, Mask, Path, PathBuilder, Pixmap, PixmapPaint, Transform};
 
 use crate::components::interface::{
@@ -8,7 +10,7 @@ use crate::components::interface::{
 };
 
 pub struct Image {
-    image_pixmap: Pixmap,
+    image_pixmap: Arc<Pixmap>,
     children: Vec<Box<dyn Component>>,
 }
 
@@ -26,7 +28,7 @@ impl Component for Image {
 
     fn draw_self(
         &self,
-        pixmap: &mut Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         _style: &ComponentStyle,
@@ -37,13 +39,12 @@ impl Component for Image {
 
         paint.quality = FilterQuality::Bilinear;
 
-        pixmap.draw_pixmap(
+        scene.draw_image(
             render_params.x as i32,
             render_params.y as i32,
-            self.image_pixmap.as_ref(),
-            &paint,
+            self.image_pixmap.clone(),
+            paint,
             transform,
-            None,
         );
 
         Ok(())
@@ -57,7 +58,7 @@ impl Image {
         image_pixmap.apply_mask(&rounded_mask);
 
         Ok(Self {
-            image_pixmap,
+            image_pixmap: Arc::new(image_pixmap),
             children: vec![],
         })
     }

@@ -1,3 +1,4 @@
+use crate::rendering::Scene;
 use cosmic_text::{Align, Attrs, Family, Metrics, Weight};
 
 use crate::{
@@ -41,7 +42,7 @@ impl Component for Title {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         _style: &ComponentStyle,
@@ -53,14 +54,13 @@ impl Component for Title {
             .color(parse_hex_to_cosmic_color(&config.color))
             .family(Family::Name(&config.font_family));
 
-        context.font_renderer.lock().unwrap().draw_line(
+        scene.draw_line(
             0.,
             render_params.y,
             Metrics::new(10., 10.),
             &self.content.clone().unwrap(),
             attrs,
             Some(Align::Center),
-            pixmap,
         );
 
         Ok(())

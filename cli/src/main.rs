@@ -8,9 +8,8 @@ mod range;
 mod watermark;
 mod window;
 
-use std::fs::read_to_string;
-use std::io;
-use std::io::Write;
+use std::fs::{read_to_string, File};
+use std::io::{self, BufWriter, Write};
 
 use anyhow::bail;
 use clap::value_parser;
@@ -19,8 +18,8 @@ use code::create_content;
 use code_config::create_code_config;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
-use codesnap::snapshot::snapshot_data::SnapshotData;
 use codesnap::themes::parse_code_theme;
+use codesnap::utils::path::parse_file_name;
 use config::CodeSnapCLIConfig;
 use egg::say;
 use watermark::create_watermark;
@@ -245,20 +244,9 @@ struct CLI {
 
 fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<String> {
     if cli.output == "raw" {
-        // Output to stdout
-        match snapshot.create_snapshot()?.png_data()? {
-            SnapshotData::Image {
-                data,
-                width: _,
-                height: _,
-            } => {
-                io::stdout().write_all(&data)?;
-                io::stdout().flush()?;
-            }
-            SnapshotData::Text(content) => {
-                print!("{content}");
-            }
-        };
+        let mut stdout = io::stdout().lock();
+        snapshot.write_png(&mut stdout)?;
+        stdout.flush()?;
 
         return Ok("Output to stdout".to_string());
     }
@@ -280,18 +268,19 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
         return Ok("Snapshot copied to clipboard".to_string());
     }
 
-    let image_snapshot = snapshot.create_snapshot()?;
-
     // Save snapshot to file
     match cli.output.as_str() {
         output if output.ends_with(".png") => {
-            image_snapshot.png_data()?.save(&cli.output)?;
+            let path = parse_file_name(&cli.output)?;
+            let mut output = BufWriter::new(File::create(path)?);
+            snapshot.write_png(&mut output)?;
+            output.flush()?;
         }
         output if output.ends_with(".svg") => {
-            image_snapshot.svg_data()?.save(&cli.output)?;
+            snapshot.create_snapshot()?.svg_data()?.save(&cli.output)?;
         }
         output if output.ends_with(".html") => {
-            image_snapshot.html_data()?.save(&cli.output)?;
+            snapshot.create_snapshot()?.html_data()?.save(&cli.output)?;
         }
         _ => {
             bail!("Unsupported output format");

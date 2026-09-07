@@ -29,18 +29,6 @@ impl<'a> ImageRefMut<'a> {
             height,
         }
     }
-
-    #[allow(dead_code)]
-    #[inline]
-    fn pixel_at(&self, x: u32, y: u32) -> RGBA8 {
-        self.data[(self.width * y + x) as usize]
-    }
-
-    #[allow(dead_code)]
-    #[inline]
-    fn pixel_at_mut(&mut self, x: u32, y: u32) -> &mut RGBA8 {
-        &mut self.data[(self.width * y + x) as usize]
-    }
 }
 
 /// Applies a box blur.
@@ -63,6 +51,13 @@ pub fn apply(sigma_x: f64, sigma_y: f64, mut src: ImageRefMut) {
         let radius_vert = ((box_size_vert - 1) / 2) as usize;
         box_blur_impl(radius_horz, radius_vert, &mut backbuf, &mut src);
     }
+}
+
+pub fn support_radius(sigma: f64) -> u32 {
+    create_box_gauss(sigma as f32)
+        .iter()
+        .map(|size| ((size - 1) / 2) as u32)
+        .sum()
 }
 
 #[inline(never)]
@@ -117,6 +112,7 @@ fn box_blur_impl(
 fn box_blur_vert(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut ImageRefMut) {
     if blur_radius == 0 {
         frontbuf.data.copy_from_slice(backbuf.data);
+
         return;
     }
 
@@ -124,8 +120,6 @@ fn box_blur_vert(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
     let height = backbuf.height as usize;
 
     let iarr = 1.0 / (blur_radius + blur_radius + 1) as f32;
-    let blur_radius_prev = blur_radius as isize - height as isize;
-    let blur_radius_next = blur_radius as isize + 1;
 
     for i in 0..width {
         let col_start = i; //inclusive
@@ -137,10 +131,10 @@ fn box_blur_vert(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
         let fv = RGBA8::default();
         let lv = RGBA8::default();
 
-        let mut val_r = blur_radius_next * (fv.r as isize);
-        let mut val_g = blur_radius_next * (fv.g as isize);
-        let mut val_b = blur_radius_next * (fv.b as isize);
-        let mut val_a = blur_radius_next * (fv.a as isize);
+        let mut val_r = 0_isize;
+        let mut val_g = 0_isize;
+        let mut val_b = 0_isize;
+        let mut val_a = 0_isize;
 
         // Get the pixel at the specified index, or the first pixel of the column
         // if the index is beyond the top edge of the image
@@ -168,12 +162,6 @@ fn box_blur_vert(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
             val_g += bb.g as isize;
             val_b += bb.b as isize;
             val_a += bb.a as isize;
-        }
-        if blur_radius > height {
-            val_r += blur_radius_prev * (lv.r as isize);
-            val_g += blur_radius_prev * (lv.g as isize);
-            val_b += blur_radius_prev * (lv.b as isize);
-            val_a += blur_radius_prev * (lv.a as isize);
         }
 
         for _ in 0..cmp::min(height, blur_radius + 1) {
@@ -242,6 +230,7 @@ fn box_blur_vert(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
 fn box_blur_horz(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut ImageRefMut) {
     if blur_radius == 0 {
         frontbuf.data.copy_from_slice(backbuf.data);
+
         return;
     }
 
@@ -249,8 +238,6 @@ fn box_blur_horz(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
     let height = backbuf.height as usize;
 
     let iarr = 1.0 / (blur_radius + blur_radius + 1) as f32;
-    let blur_radius_prev = blur_radius as isize - width as isize;
-    let blur_radius_next = blur_radius as isize + 1;
 
     for i in 0..height {
         let row_start = i * width; // inclusive
@@ -262,10 +249,10 @@ fn box_blur_horz(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
         let fv = RGBA8::default();
         let lv = RGBA8::default();
 
-        let mut val_r = blur_radius_next * (fv.r as isize);
-        let mut val_g = blur_radius_next * (fv.g as isize);
-        let mut val_b = blur_radius_next * (fv.b as isize);
-        let mut val_a = blur_radius_next * (fv.a as isize);
+        let mut val_r = 0_isize;
+        let mut val_g = 0_isize;
+        let mut val_b = 0_isize;
+        let mut val_a = 0_isize;
 
         // Get the pixel at the specified index, or the first pixel of the row
         // if the index is beyond the left edge of the image
@@ -293,12 +280,6 @@ fn box_blur_horz(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
             val_g += bb.g as isize;
             val_b += bb.b as isize;
             val_a += bb.a as isize;
-        }
-        if blur_radius > width {
-            val_r += blur_radius_prev * (lv.r as isize);
-            val_g += blur_radius_prev * (lv.g as isize);
-            val_b += blur_radius_prev * (lv.b as isize);
-            val_a += blur_radius_prev * (lv.a as isize);
         }
 
         // Process the left side where we need pixels from beyond the left edge
@@ -375,6 +356,7 @@ fn box_blur_horz(blur_radius: usize, backbuf: &ImageRefMut, frontbuf: &mut Image
 fn round(mut x: f32) -> f32 {
     x += 12582912.0;
     x -= 12582912.0;
+
     x
 }
 

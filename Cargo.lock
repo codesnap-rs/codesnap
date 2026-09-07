@@ -424,6 +424,7 @@ dependencies = [
  "include_dir",
  "mime_guess",
  "plist",
+ "png",
  "regex",
  "reqwest",
  "rgb",

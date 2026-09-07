@@ -6,6 +6,7 @@ use super::{
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
 };
+use crate::rendering::Scene;
 use crate::{
     config::Code,
     edges::margin::Margin,
@@ -48,13 +49,13 @@ impl Component for LineNumber {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         _style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
-        context.font_renderer.lock().unwrap().draw_text(
+        scene.draw_text(
             render_params.x,
             render_params.y,
             Metrics::new(14., CODE_LINE_HEIGHT),
@@ -68,7 +69,6 @@ impl Component for LineNumber {
                         &context.take_snapshot_params.code_config.font_family,
                     )),
             )],
-            pixmap,
         );
 
         Ok(())

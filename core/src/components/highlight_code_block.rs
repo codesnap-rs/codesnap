@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Mutex};
+use std::collections::HashMap;
 
 use crate::{config::HighlightLine, edges::padding::Padding, utils::color::RgbaColor};
 
@@ -9,6 +9,7 @@ use super::{
         style::ComponentStyle,
     },
 };
+use crate::rendering::Scene;
 use tiny_skia::{Paint, Rect, Transform};
 
 #[derive(Default)]
@@ -34,7 +35,7 @@ impl Component for HighlightCodeBlock {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &super::interface::component::ComponentContext,
         render_params: &super::interface::component::RenderParams,
         _style: &super::interface::style::ComponentStyle,
@@ -56,11 +57,10 @@ impl Component for HighlightCodeBlock {
                 color,
             );
 
-            pixmap.fill_rect(
+            scene.fill_rect(
                 rect,
-                &paint,
+                paint,
                 Transform::from_scale(context.scale_factor, context.scale_factor),
-                None,
             );
         }
 
@@ -84,13 +84,13 @@ impl HighlightCodeBlock {
 
     fn draw_highlight_line(
         &self,
-        style_map: &Mutex<HashMap<&'static str, ComponentStyle>>,
+        style_map: &HashMap<&'static str, ComponentStyle>,
         render_params: &RenderParams,
         parent_style: &ComponentStyle,
         start_line_number: u32,
         end_line_number: u32,
         hex: &str,
-    ) -> (Rect, Paint) {
+    ) -> (Rect, Paint<'static>) {
         // If the start_line_number is greater than end_line_number, swap them
         if start_line_number > end_line_number {
             return self.draw_highlight_line(
@@ -103,7 +103,6 @@ impl HighlightCodeBlock {
             );
         }
 
-        let style_map = style_map.lock().unwrap();
         let editor_style = style_map.get("RectInnerLayer").unwrap();
         let end_line_number = end_line_number.min(self.code_line_count as u32);
         let mut paint = Paint::default();

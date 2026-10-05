@@ -202,6 +202,10 @@ Or if you are using CLI tool, CodeSnap will generate a default config file for y
 }
 ```
 
+For line-number color, scale factor, window border, breadcrumbs, and title, configuration precedence is: built-in defaults, then JSON config values, then explicitly provided CLI arguments. Omitting the corresponding CLI option preserves its config value.
+
+`--has-breadcrumbs` and `--has-border` enable their respective features. Both also accept explicit boolean values, such as `--has-breadcrumbs false` or `--has-border=false`. Enabling a border preserves its configured positive width, or uses a width of 1 if the configured border is disabled. `--border-color` changes only the color.
+
 All configuration items can be found in [config.rs](https://github.com/mistricky/CodeSnap/blob/main/core/src/config.rs)
 
 

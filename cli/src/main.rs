@@ -96,7 +96,7 @@ struct CLI {
 
     /// Breadcrumbs is a useful and unique feature in CodeSnap, it shows the path of the file
     /// so that users can know where the code snippet comes from.
-    #[arg(long, default_value = "false")]
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     has_breadcrumbs: Option<bool>,
 
     #[arg(long, default_value = "false")]
@@ -120,8 +120,8 @@ struct CLI {
     start_line_number: Option<u32>,
 
     /// Line number font color
-    #[arg(long, default_value = "#495162")]
-    line_number_color: String,
+    #[arg(long)]
+    line_number_color: Option<String>,
 
     /// Delete lines will be marked with a red line
     #[arg(long, short, num_args=1..)]
@@ -201,12 +201,12 @@ struct CLI {
     mac_window_bar: Option<bool>,
 
     /// Display window border
-    #[arg(long, default_value_t = true)]
-    has_border: bool,
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    has_border: Option<bool>,
 
     /// Window border color
-    #[arg(long, default_value = "#ffffff30")]
-    border_color: String,
+    #[arg(long)]
+    border_color: Option<String>,
 
     /// Set horizontal margin of window
     #[arg(long)]
@@ -221,8 +221,8 @@ struct CLI {
     title: Option<String>,
 
     /// CodeSnap supports scaling the snapshot, the default scale factor is 3 for better quality
-    #[arg(long, default_value_t = 3)]
-    scale_factor: u8,
+    #[arg(long)]
+    scale_factor: Option<u8>,
 
     /// Title font family
     #[arg(long)]
@@ -320,21 +320,28 @@ async fn generate_snapshot_with_config(cli: &CLI, codesnap: CodeSnap) -> anyhow:
     Ok(())
 }
 
-async fn create_snapshot_config(
-    cli: &CLI,
-    mut codesnap: CodeSnap,
-) -> anyhow::Result<SnapshotConfig> {
-    // Build screenshot config
-    let mut codesnap = codesnap
+fn build_snapshot_config(cli: &CLI, mut codesnap: CodeSnap) -> anyhow::Result<SnapshotConfig> {
+    codesnap
         .map_code_config(|code_config| create_code_config(cli, code_config))?
         .map_content(|default_content| create_content(cli, default_content))?
         .map_watermark(|watermark| create_watermark(cli, watermark))?
-        .map_window(|window| create_window(cli, window))?
-        .scale_factor(cli.scale_factor)
-        .build()?;
+        .map_window(|window| create_window(cli, window))?;
 
-    codesnap.line_number_color = cli.line_number_color.clone();
-    codesnap.title = cli.title.clone();
+    if let Some(scale_factor) = cli.scale_factor {
+        codesnap.scale_factor(scale_factor);
+    }
+    if let Some(ref line_number_color) = cli.line_number_color {
+        codesnap.line_number_color(line_number_color.clone());
+    }
+    if let Some(ref title) = cli.title {
+        codesnap.title(title.clone());
+    }
+
+    Ok(codesnap.build()?)
+}
+
+async fn create_snapshot_config(cli: &CLI, codesnap: CodeSnap) -> anyhow::Result<SnapshotConfig> {
+    let mut codesnap = build_snapshot_config(cli, codesnap)?;
     codesnap.theme = parse_code_theme(
         cli.code_theme
             .clone()
@@ -395,3 +402,6 @@ async fn main() {
         return;
     };
 }
+
+#[cfg(test)]
+mod tests;

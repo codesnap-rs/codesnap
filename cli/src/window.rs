@@ -18,15 +18,19 @@ pub fn create_window(cli: &CLI, config_window: Window) -> anyhow::Result<Window>
     };
     window.mac_window_bar = cli.mac_window_bar.unwrap_or(config_window.mac_window_bar);
     window.title_config = create_title(cli, config_window.title_config);
-    window.border = create_border(cli);
+    window.border = create_border(cli, config_window.border);
 
     Ok(window)
 }
 
-fn create_border(cli: &CLI) -> Border {
+fn create_border(cli: &CLI, config: Border) -> Border {
     Border {
-        color: cli.border_color.clone(),
-        width: if cli.has_border { 1. } else { 0. },
+        color: cli.border_color.clone().unwrap_or(config.color),
+        width: match cli.has_border {
+            Some(false) => 0.,
+            Some(true) if config.width <= 0. => 1.,
+            _ => config.width,
+        },
     }
 }
 

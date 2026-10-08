@@ -7,6 +7,8 @@ use crate::utils::clipboard::Clipboard;
 use crate::utils::path::parse_file_name;
 use std::fs::write;
 
+use super::png;
+
 pub enum SnapshotData {
     Image {
         data: Vec<u8>,
@@ -22,7 +24,7 @@ impl SnapshotData {
             width: pixmap.width() as usize,
             height: pixmap.height() as usize,
             data: if is_png_format {
-                pixmap.encode_png()?
+                png::to_vec(pixmap)?
             } else {
                 pixmap.data().to_vec()
             },
@@ -32,14 +34,12 @@ impl SnapshotData {
     pub fn save(&self, save_path: &str) -> anyhow::Result<()> {
         let path = parse_file_name(save_path)?;
 
-        Ok(match self {
+        match self {
             SnapshotData::Text(data) => write(path, data)?,
-            SnapshotData::Image {
-                data,
-                width: _,
-                height: _,
-            } => write(path, data)?,
-        })
+            SnapshotData::Image { data, .. } => write(path, data)?,
+        }
+
+        Ok(())
     }
 
     #[cfg(feature = "copy")]

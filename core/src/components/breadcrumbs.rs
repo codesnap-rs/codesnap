@@ -1,3 +1,4 @@
+use crate::rendering::Scene;
 use std::path::MAIN_SEPARATOR_STR;
 
 use cosmic_text::{Attrs, Family, Metrics};
@@ -55,7 +56,7 @@ impl Component for Breadcrumbs {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &super::interface::component::ComponentContext,
         render_params: &super::interface::component::RenderParams,
         _style: &super::interface::style::ComponentStyle,
@@ -78,12 +79,11 @@ impl Component for Breadcrumbs {
                 &context.take_snapshot_params.code_config.font_family,
             ));
 
-            context.font_renderer.lock().unwrap().draw_text(
+            scene.draw_text(
                 render_params.x,
                 render_params.y,
                 Metrics::new(12., LINE_HEIGHT),
                 vec![(&path, attrs)],
-                pixmap,
             );
         }
 

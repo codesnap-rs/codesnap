@@ -28,29 +28,19 @@ impl Highlight {
     ) -> Result<Vec<(&str, Attrs)>, RenderError> {
         let attrs = Attrs::new().family(Family::Name(self.font_family.as_ref()));
 
-        // Highlight the content line by line using highlight_line function
-        Ok(LinesWithEndings::from(&self.content)
-            .map(|line| {
-                highlight
-                    .highlight_line(line, &syntax_set)
-                    .unwrap()
-                    .into_iter()
-                    .map(|(style, str)| {
-                        let syntect::highlighting::Color { r, g, b, a } = style.foreground;
-                        let attrs_cloned = attrs.clone();
-                        let attrs = match style.font_style {
-                            FontStyle::BOLD => attrs_cloned.weight(Weight::BOLD),
-                            FontStyle::ITALIC => attrs_cloned.style(Style::Italic),
-                            FontStyle::UNDERLINE => attrs_cloned.style(Style::Normal),
-                            _ => attrs_cloned,
-                        };
+        let mut spans = Vec::new();
+        for line in LinesWithEndings::from(&self.content) {
+            for (style, text) in highlight.highlight_line(line, syntax_set).unwrap() {
+                let syntect::highlighting::Color { r, g, b, a } = style.foreground;
+                let attrs = match style.font_style {
+                    FontStyle::BOLD => attrs.clone().weight(Weight::BOLD),
+                    FontStyle::ITALIC => attrs.clone().style(Style::Italic),
+                    _ => attrs.clone(),
+                };
+                spans.push((text, attrs.color(cosmic_text::Color::rgba(r, g, b, a))));
+            }
+        }
 
-                        (str, attrs.color(cosmic_text::Color::rgba(r, g, b, a)))
-                    })
-                    .collect::<HighlightResult>()
-            })
-            .fold(vec![], |acc, cur| [acc, cur].concat())
-            .into_iter()
-            .collect::<HighlightResult>())
+        Ok(spans)
     }
 }

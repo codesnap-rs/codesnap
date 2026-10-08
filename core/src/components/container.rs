@@ -1,7 +1,7 @@
-use tiny_skia::Pixmap;
+use crate::rendering::Scene;
 
 use super::interface::{
-    component::{Component, ComponentContext, ComponentRenderParams},
+    component::{Component, ComponentContext, RenderParams},
     render_error::Result,
     style::Style,
 };
@@ -25,22 +25,22 @@ impl Container {
         Container { children }
     }
 
-    pub fn draw_root(&self, context: &ComponentContext) -> Result<Pixmap> {
+    pub fn prepare_scene(&self, context: &mut ComponentContext) -> Result<Scene> {
         let style = self.parsed_style(None, context);
-        let mut pixmap = Pixmap::new(
+        let mut scene = Scene::new(
             (style.width * context.scale_factor) as u32,
             (style.height * context.scale_factor) as u32,
-        )
-        .unwrap();
+            context.font_renderer.clone(),
+        );
 
         self.draw(
-            &mut pixmap,
+            &mut scene,
             context,
-            ComponentRenderParams::default(),
+            RenderParams::default(),
             Style::default(),
             Style::default(),
         )?;
 
-        Ok(pixmap)
+        Ok(scene)
     }
 }

@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    io::Write,
     sync::{Arc, Mutex},
 };
 
@@ -9,13 +10,14 @@ use crate::{
             command_line_header::CommandLineHeader, command_line_output::CommandLineOutput,
         },
         image::Image,
-        interface::{component::Component, style::Style},
+        interface::component::Component,
         layout::{column::Column, row::Row},
     },
     config::{self, CommandLineContent, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
+    rendering::Scene,
     utils::{color::RgbaColor, text::FontRenderer, theme_provider::ThemeProvider},
 };
-use tiny_skia::{Color, Pixmap};
+use tiny_skia::Color;
 
 use crate::{
     components::{
@@ -32,23 +34,36 @@ use crate::{
     },
     edges::padding::Padding,
 };
-use base64::{engine::general_purpose::STANDARD, Engine as _};
+use base64::{engine::general_purpose::STANDARD, write::EncoderWriter};
 
-use super::snapshot_data::SnapshotData;
+use super::{png, snapshot_data::SnapshotData};
 
 const DEFAULT_WINDOW_MIN_WIDTH: f32 = 350.;
 
 pub struct ImageSnapshot {
-    pixmap: Pixmap,
+    scene: Scene,
 }
 
 impl ImageSnapshot {
     pub fn raw_data(&self) -> Result<SnapshotData, anyhow::Error> {
-        SnapshotData::from_pixmap(&self.pixmap, false)
+        let pixmap = self.scene.render()?;
+
+        Ok(SnapshotData::Image {
+            width: pixmap.width() as usize,
+            height: pixmap.height() as usize,
+            data: pixmap.take(),
+        })
     }
 
     pub fn png_data(&self) -> Result<SnapshotData, anyhow::Error> {
-        SnapshotData::from_pixmap(&self.pixmap, true)
+        let mut data = Vec::new();
+        self.scene.write_png(&mut data)?;
+
+        Ok(SnapshotData::Image {
+            width: self.scene.width() as usize,
+            height: self.scene.height() as usize,
+            data,
+        })
     }
 
     pub fn svg_data(&self) -> Result<SnapshotData, anyhow::Error> {
@@ -69,9 +84,10 @@ impl ImageSnapshot {
     }
 
     pub fn to_base64(&self) -> Result<String, anyhow::Error> {
-        let png_data = self.pixmap.encode_png()?;
+        let mut output = EncoderWriter::new(Vec::new(), &STANDARD);
+        self.scene.write_png(&mut output)?;
 
-        Ok(STANDARD.encode(png_data))
+        Ok(String::from_utf8(output.finish()?).unwrap())
     }
 
     /// CodeSnap use tiny_skia to generate the image snapshot, and the format of generated image
@@ -87,47 +103,6 @@ impl ImageSnapshot {
         );
 
         Ok(parsed_svg_content)
-    }
-
-    pub fn create_drawer_with_frame(
-        config: SnapshotConfig,
-        theme_provider: ThemeProvider,
-        render_content: Box<dyn Component>,
-    ) -> anyhow::Result<Pixmap> {
-        // The style parse process is recursive, there may some components style to be reculculated
-        // many times, so we cache the style to avoid reculculate
-        // The key is the component name, which defined in the Component trait
-        let style_map: Mutex<HashMap<&'static str, Style<f32>>> = Mutex::new(HashMap::new());
-
-        let font_renderer = Mutex::new(FontRenderer::new(
-            config.scale_factor as f32,
-            config.fonts_folders.clone(),
-        ));
-        let context = ComponentContext {
-            scale_factor: config.scale_factor as f32,
-            take_snapshot_params: Arc::new(config.clone()),
-            theme_provider: theme_provider.clone(),
-            font_renderer,
-            style_map,
-        };
-        let background_padding = Padding::from(config.window.margin.clone());
-
-        // If vertical background padding is less than 82., should hidden watermark component
-        // If watermark text is equal to "", the watermark component is hidden
-        let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
-            config.watermark.clone()
-        } else {
-            None
-        };
-
-        // Draw the image snapshot frame template
-        let pixmap = Container::from_children(vec![Box::new(Background::new(
-            background_padding,
-            vec![render_content, Box::new(Watermark::new(watermark))],
-        ))])
-        .draw_root(&context)?;
-
-        Ok(pixmap)
     }
 
     pub fn draw_code_content(
@@ -151,15 +126,10 @@ impl ImageSnapshot {
         Ok(view)
     }
 
-    // pub fn draw_image_content() -> {
-    //
-    // }
-
     pub fn command_line_content(
         command_line_content: Vec<CommandLineContent>,
     ) -> Vec<Box<dyn Component>> {
         command_line_content
-            .clone()
             .into_iter()
             .map(|output| {
                 Box::new(Column::from_children(vec![
@@ -171,6 +141,14 @@ impl ImageSnapshot {
     }
 
     pub fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
+        let scene = Scene::from_config(config)?;
+
+        Ok(Self { scene })
+    }
+}
+
+impl Scene {
+    fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
         let theme_provider = ThemeProvider::from_config(&config)?;
         let window_padding = Padding {
             top: if config.window.mac_window_bar {
@@ -183,54 +161,16 @@ impl ImageSnapshot {
         let editor_background_color = theme_provider.theme_background();
         let border_rgba_color: RgbaColor = config.window.border.color.as_str().into();
         let shadow_color: RgbaColor = config.window.shadow.color.as_str().into();
-        let config_cloned = config.clone();
-        let window_padding_cloned = window_padding.clone();
-        let theme_provider_cloned = theme_provider.clone();
-        let shadow_color_cloned = shadow_color.clone();
 
-        let draw_with_code_window = move |render_content| {
-            let mut parsed_render_content: Vec<Box<dyn Component>> =
-                vec![Box::new(Row::from_children(vec![
-                    Box::new(MacTitleBar::new(config.window.mac_window_bar)),
-                    Box::new(Title::from_content(config_cloned.title.clone())),
-                ]))];
-
-            parsed_render_content.extend(render_content);
-
-            Self::create_drawer_with_frame(
-                config_cloned.clone(),
-                theme_provider_cloned.clone(),
-                Box::new(
-                    Rect::create_with_border(
-                        config_cloned.window.radius,
-                        editor_background_color.into(),
-                        DEFAULT_WINDOW_MIN_WIDTH,
-                        window_padding_cloned,
-                        config.window.border.width,
-                        border_rgba_color.into(),
-                        parsed_render_content,
-                    )
-                    .shadow(
-                        0.,
-                        21.,
-                        config.window.shadow.radius,
-                        Color::from(shadow_color_cloned),
-                    ),
-                ),
-            )
-        };
-
-        let pixmap = match &config.content {
+        let render_content = match &config.content {
             crate::config::Content::Code(code) => {
-                draw_with_code_window(Self::draw_code_content(&window_padding, code.clone())?)?
+                ImageSnapshot::draw_code_content(&window_padding, code.clone())?
             }
             crate::config::Content::CommandOutput(command_line_content) => {
-                draw_with_code_window(Self::command_line_content(command_line_content.clone()))?
+                ImageSnapshot::command_line_content(command_line_content.clone())
             }
-            crate::config::Content::Image(image_data) => Self::create_drawer_with_frame(
-                config.clone(),
-                theme_provider.clone(),
-                Box::new(
+            crate::config::Content::Image(image_data) => {
+                let image = Box::new(
                     Rect::new(
                         config.window.radius,
                         Color::from_rgba8(255, 255, 255, 0),
@@ -248,10 +188,83 @@ impl ImageSnapshot {
                         config.window.shadow.radius,
                         Color::from(shadow_color),
                     ),
-                ),
-            )?,
+                );
+
+                return Self::with_frame(config, theme_provider, image);
+            }
+        };
+        let mut children: Vec<Box<dyn Component>> = vec![Box::new(Row::from_children(vec![
+            Box::new(MacTitleBar::new(config.window.mac_window_bar)),
+            Box::new(Title::from_content(config.title.clone())),
+        ]))];
+        children.extend(render_content);
+        let window = Rect::create_with_border(
+            config.window.radius,
+            editor_background_color.into(),
+            DEFAULT_WINDOW_MIN_WIDTH,
+            window_padding,
+            config.window.border.width,
+            border_rgba_color.into(),
+            children,
+        )
+        .shadow(
+            0.,
+            21.,
+            config.window.shadow.radius,
+            Color::from(shadow_color),
+        );
+
+        Self::with_frame(config, theme_provider, Box::new(window))
+    }
+
+    fn with_frame(
+        config: SnapshotConfig,
+        theme_provider: ThemeProvider,
+        render_content: Box<dyn Component>,
+    ) -> anyhow::Result<Self> {
+        let background_padding = Padding::from(config.window.margin.clone());
+
+        // If vertical background padding is less than 82., should hidden watermark component
+        // If watermark text is equal to "", the watermark component is hidden
+        let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
+            config.watermark.clone()
+        } else {
+            None
+        };
+        let mut context = ComponentContext {
+            scale_factor: config.scale_factor as f32,
+            font_renderer: Arc::new(Mutex::new(FontRenderer::new(
+                config.scale_factor as f32,
+                config.fonts_folders.clone(),
+            ))),
+            take_snapshot_params: config,
+            theme_provider,
+            style_map: HashMap::new(),
         };
 
-        Ok(Self { pixmap })
+        // Draw the image snapshot frame template
+        let scene = Container::from_children(vec![Box::new(Background::new(
+            background_padding,
+            vec![render_content, Box::new(Watermark::new(watermark))],
+        ))])
+        .prepare_scene(&mut context)?;
+
+        Ok(scene)
+    }
+
+    fn write_png(&self, output: impl Write) -> anyhow::Result<()> {
+        let (width, height) = (self.width(), self.height());
+        let strips = (0..height)
+            .step_by(512)
+            .map(|y| self.render_strip(y, (height - y).min(512)));
+
+        png::write(output, width, height, strips)
+    }
+}
+
+impl SnapshotConfig {
+    /// Render a PNG in bounded-height strips without allocating a full RGBA canvas
+    pub fn write_png(&self, output: impl Write) -> anyhow::Result<()> {
+        Scene::from_config(self.clone())?.write_png(output)
     }
 }

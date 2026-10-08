@@ -1,9 +1,6 @@
-use tiny_skia::{LinearGradient, Paint, Pixmap, Point, Rect, SpreadMode, Transform};
+use crate::rendering::Scene;
 
-use crate::{
-    edges::{edge::Edge, padding::Padding},
-    utils::{color::RgbaColor, helpers::convert_vecs},
-};
+use crate::edges::{edge::Edge, padding::Padding};
 
 use super::interface::{
     component::{Component, ComponentContext, RenderParams},
@@ -47,46 +44,13 @@ impl Component for Background {
 
     fn draw_self(
         &self,
-        pixmap: &mut Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         _render_params: &RenderParams,
         _style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
-        let mut paint = Paint::default();
-        let w = pixmap.width() as f32;
-        let h = pixmap.height() as f32;
-        let params = &context.take_snapshot_params;
-
-        paint.anti_alias = false;
-
-        match &params.background {
-            crate::config::Background::Solid(solid_background) => {
-                let rgba_color: RgbaColor = solid_background.as_str().into();
-
-                paint.set_color(rgba_color.into());
-            }
-            crate::config::Background::Gradient(gradient_background) => {
-                let start = gradient_background.start.into_f32_point(w, h);
-                let end = gradient_background.end.into_f32_point(w, h);
-
-                paint.shader = LinearGradient::new(
-                    Point::from_xy(start.x, start.y),
-                    Point::from_xy(end.x, end.y),
-                    convert_vecs(gradient_background.stops.clone()),
-                    SpreadMode::Pad,
-                    Transform::identity(),
-                )
-                .unwrap();
-            }
-        };
-
-        pixmap.fill_rect(
-            Rect::from_xywh(0., 0., w, h).unwrap(),
-            &paint,
-            Transform::identity(),
-            None,
-        );
+        scene.background(&context.take_snapshot_params.background);
 
         Ok(())
     }

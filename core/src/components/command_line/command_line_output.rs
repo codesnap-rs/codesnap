@@ -1,3 +1,4 @@
+use crate::rendering::Scene;
 use cosmic_text::Metrics;
 
 use crate::{
@@ -32,7 +33,7 @@ impl Component for CommandLineOutput {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &component::ComponentContext,
         render_params: &component::RenderParams,
         _style: &style::ComponentStyle,
@@ -44,13 +45,7 @@ impl Component for CommandLineOutput {
         );
         let spans = ansi.colorize();
 
-        context.font_renderer.lock().unwrap().draw_text(
-            render_params.x,
-            render_params.y,
-            self.metrics,
-            spans.clone(),
-            pixmap,
-        );
+        scene.draw_text(render_params.x, render_params.y, self.metrics, spans);
 
         Ok(())
     }

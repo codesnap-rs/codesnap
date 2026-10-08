@@ -5,14 +5,10 @@ use super::interface::{
 };
 use crate::{
     edges::{edge::Edge, padding::Padding},
-    utils::blur::{apply, ImageRefMut},
+    rendering::{shadow::Shadow, Scene},
 };
-use rgb::FromSlice;
-use tiny_skia::{
-    Color, FillRule, Paint, PathBuilder, Pixmap, PixmapPaint, Rect as SkiaRect, Transform,
-};
+use tiny_skia::{Color, Paint, PathBuilder, Rect as SkiaRect, Transform};
 
-#[derive(Debug)]
 struct ShadowConfig {
     x: f32,
     y: f32,
@@ -48,7 +44,7 @@ impl Component for Rect {
 
     fn draw_self(
         &self,
-        pixmap: &mut Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         style: &ComponentStyle,
@@ -103,12 +99,26 @@ impl Component for Rect {
 
         paint.set_color(self.color);
 
-        // Draw shadow element
         if let Some(shadow) = &self.shadow {
-            self.draw_shadow(pixmap, render_params, shadow, transform, style, context);
+            let background_padding: Padding =
+                context.take_snapshot_params.window.margin.clone().into();
+            let pixmap_w = w + background_padding.horizontal();
+            let pixmap_h = h + background_padding.vertical();
+            let pixmap_offset_x = (pixmap_w - w) / 2.;
+            let pixmap_offset_y = (pixmap_h - h) / 2.;
+            let shadow_pixmap_x = x - pixmap_offset_x;
+            let shadow_pixmap_y = y - pixmap_offset_y;
+            scene.draw_shadow(Shadow::new(
+                SkiaRect::from_xywh(shadow_pixmap_x, shadow_pixmap_y, pixmap_w, pixmap_h).unwrap(),
+                SkiaRect::from_xywh(shadow.x + pixmap_offset_x, shadow.y + pixmap_offset_y, w, h)
+                    .unwrap(),
+                shadow.color,
+                shadow.blur,
+                context.scale_factor,
+            ));
         }
 
-        pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
+        scene.fill_path(path, paint, transform);
 
         Ok(())
     }
@@ -132,70 +142,6 @@ impl Rect {
             component_name,
             shadow: None,
         }
-    }
-
-    fn draw_shadow(
-        &self,
-        parent_pixmap: &mut Pixmap,
-        render_params: &RenderParams,
-        shadow: &ShadowConfig,
-        transform: Transform,
-        host_element_style: &ComponentStyle,
-        context: &ComponentContext,
-    ) {
-        let w = host_element_style.width;
-        let h = host_element_style.height;
-        let config = context.take_snapshot_params.clone();
-        let background_padding: Padding = config.window.margin.clone().into();
-        // The shadow has a fixed length when blur is applied
-        // thus the (shadow length) + (pixmap length) will out of the original pixmap
-        // so we need to set a bigger pixmap to draw the shadow
-        // the shadow_length is something like a "buffer" for drawing shadow
-        // the original pixmap will draw at x and y, if we scale the pixmap with shadow_length
-        // offset = (pixmap width - original pixmap width) / 2
-        // x = x - offset
-        // y = y - offset
-        //
-        // And we must draw the shadow object at center of the pixmap
-        // so the shadow object should draw at:
-        //
-        // x = x + offset
-        // y = y + offset
-        let pixmap_w = w + background_padding.horizontal();
-        let pixmap_h = h + background_padding.vertical();
-        let pixmap_offset_x = (pixmap_w - w) / 2.;
-        let pixmap_offset_y = (pixmap_h - h) / 2.;
-
-        let mut pixmap = Pixmap::new(pixmap_w as u32, pixmap_h as u32).unwrap();
-        let mut paint = Paint::default();
-        let shadow_pixmap_x = render_params.x - pixmap_offset_x;
-        let shadow_pixmap_y = render_params.y - pixmap_offset_y;
-
-        paint.set_color(shadow.color);
-        pixmap.fill_rect(
-            SkiaRect::from_xywh(shadow.x + pixmap_offset_x, shadow.y + pixmap_offset_y, w, h)
-                .unwrap(),
-            &paint,
-            Transform::identity(),
-            None,
-        );
-
-        let rgba = pixmap.data_mut().as_rgba_mut();
-
-        apply(
-            shadow.blur as f64,
-            shadow.blur as f64,
-            ImageRefMut::new(pixmap_w as u32, pixmap_h as u32, rgba),
-        );
-
-        parent_pixmap.draw_pixmap(
-            shadow_pixmap_x as i32,
-            shadow_pixmap_y as i32,
-            pixmap.as_ref(),
-            &PixmapPaint::default(),
-            transform,
-            None,
-        );
     }
 
     // The implementation of boder in CodeSnap is create a new Rect component with border color
@@ -243,6 +189,7 @@ impl Rect {
 
     pub fn shadow(mut self, x: f32, y: f32, blur: f32, color: Color) -> Rect {
         self.shadow = Some(ShadowConfig { x, y, blur, color });
+
         self
     }
 }

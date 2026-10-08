@@ -1,3 +1,4 @@
+use crate::rendering::Scene;
 use cosmic_text::Metrics;
 use syntect::{
     easy::HighlightLines,
@@ -15,7 +16,7 @@ use crate::{
 };
 
 const FONT_SIZE: f32 = 12.5;
-pub(crate) const CODE_LINE_HEIGHT: f32 = 18.;
+pub const CODE_LINE_HEIGHT: f32 = 18.;
 
 pub struct Code {
     children: Vec<Box<dyn Component>>,
@@ -42,7 +43,7 @@ impl Component for Code {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         _style: &ComponentStyle,
@@ -58,12 +59,11 @@ impl Component for Code {
         );
         let highlight_result = highlight.parse(&mut highlight_lines, syntax_set)?;
 
-        context.font_renderer.lock().unwrap().draw_text(
+        scene.draw_text(
             render_params.x,
             render_params.y,
             self.metrics,
-            highlight_result.clone(),
-            pixmap,
+            highlight_result,
         );
 
         Ok(())
@@ -86,7 +86,7 @@ impl Code {
         )?;
 
         Ok(Code {
-            value: prepare_code(&code_content.content),
+            value,
             children: vec![],
             metrics,
             syntax,

@@ -1,4 +1,5 @@
-use tiny_skia::{Color, FillRule, Paint, PathBuilder, Transform};
+use crate::rendering::Scene;
+use tiny_skia::{Color, Paint, PathBuilder, Transform};
 
 use crate::{
     components::interface::{
@@ -38,7 +39,7 @@ impl Component for MacTitleBar {
 
     fn draw_self(
         &self,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         context: &ComponentContext,
         render_params: &RenderParams,
         _style: &ComponentStyle,
@@ -50,7 +51,7 @@ impl Component for MacTitleBar {
             // be drwan on the original point
             render_params.x + RADIUS,
             render_params.y + RADIUS,
-            pixmap,
+            scene,
             vec![
                 Color::from_rgba8(255, 94, 87, 255),
                 Color::from_rgba8(255, 186, 46, 255),
@@ -80,7 +81,7 @@ impl MacTitleBar {
         &self,
         x: f32,
         y: f32,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         colors: Vec<Color>,
         gap: f32,
         transform: Transform,
@@ -91,7 +92,7 @@ impl MacTitleBar {
             self.draw_control_button(
                 x,
                 y,
-                pixmap,
+                scene,
                 color,
                 index as f32 * (diameter + gap),
                 transform,
@@ -103,7 +104,7 @@ impl MacTitleBar {
         &self,
         x: f32,
         y: f32,
-        pixmap: &mut tiny_skia::Pixmap,
+        scene: &mut Scene,
         color: Color,
         x_offset: f32,
         transform: Transform,
@@ -117,6 +118,6 @@ impl MacTitleBar {
         let mut paint = Paint::default();
 
         paint.set_color(color);
-        pixmap.fill_path(&path, &paint, FillRule::Winding, transform, None);
+        scene.fill_path(path, paint, transform);
     }
 }

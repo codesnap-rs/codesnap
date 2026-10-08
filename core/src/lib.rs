@@ -24,9 +24,9 @@
 pub mod ansi;
 pub mod assets;
 mod components;
-mod rendering;
 pub mod config;
 pub mod edges;
+mod rendering;
 pub mod snapshot;
 pub mod themes;
 pub mod utils;
